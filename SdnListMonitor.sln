@@ -9,9 +9,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{7A30E7AD-15A
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{122F5EB7-AD69-40CB-AFA2-A0D37CE22BD8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SdnListMonitor.Core.Tests", "tests\SdnListMonitor.Core.Tests\SdnListMonitor.Core.Tests.csproj", "{4B4C9307-308E-43D5-870E-C66E364F9443}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SdnListMonitor.Core.Tests", "tests\SdnListMonitor.Core.Tests\SdnListMonitor.Core.Tests.csproj", "{4B4C9307-308E-43D5-870E-C66E364F9443}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SdnListMonitor.ConsoleApp", "src\SdnListMonitor.ConsoleApp\SdnListMonitor.ConsoleApp.csproj", "{B3D4D0AE-7AC8-403E-ACD4-7D782B9FC301}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SdnListMonitor.ConsoleApp", "src\SdnListMonitor.ConsoleApp\SdnListMonitor.ConsoleApp.csproj", "{B3D4D0AE-7AC8-403E-ACD4-7D782B9FC301}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
