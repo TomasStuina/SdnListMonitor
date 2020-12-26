@@ -71,13 +71,15 @@ namespace SdnListMonitor.Core.Service.Xml
 
         private async IAsyncEnumerable<ISdnEntry> ReadSdnEntriesAsync (XmlReader xmlReader)
         {
-            while (await xmlReader.ReadAsync ().ConfigureAwait (false))
+            while (!xmlReader.EOF)
             {
                 // Skip all the nodes that are not <sdnEntry/> as we are only interested in those.
-                if (!xmlReader.IsStartElement () || xmlReader.Name != SdnXmlEntry.SdnEntryNodeName)
+                if (!xmlReader.IsStartElement () || !string.Equals (xmlReader.Name, SdnXmlEntry.SdnEntryNodeName, StringComparison.Ordinal))
+                {
+                    await xmlReader.ReadAsync ().ConfigureAwait (false);
                     continue;
-
-                // Consider SDN.xml file malformed if we are unable to deserialize one of the <sdnList/> nodes.
+                }
+                //// Consider SDN.xml file malformed if we are unable to deserialize one of the <sdnList/> nodes.
                 if (!m_xmlSerializer.CanDeserialize (xmlReader))
                     throw new InvalidOperationException (Res.ErrorWhileRetrievingSdnList);
 
