@@ -1,7 +1,6 @@
-﻿using SdnListMonitor.Core.Abstractions.Service.Xml;
-using System.Xml;
+﻿using System.Xml;
 
-namespace SdnListMonitor.Core.Service.Xml
+namespace SdnListMonitor.Core.Service.Data.Xml
 {
     /// <summary>
     /// Provides a factory for instantiating <see cref="XmlReader"/>.

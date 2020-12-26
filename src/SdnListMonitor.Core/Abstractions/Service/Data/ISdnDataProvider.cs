@@ -1,8 +1,8 @@
-﻿using SdnListMonitor.Core.Abstractions.Model;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 
-namespace SdnListMonitor.Core.Abstractions.Service
+namespace SdnListMonitor.Core.Abstractions.Service.Data
 {
     /// <summary>
     /// Provides an interface for retrieving Specially Designated Nationals List entries
@@ -16,6 +16,6 @@ namespace SdnListMonitor.Core.Abstractions.Service
         /// </summary>
         /// <param name="cancellationToken">The cancellation token to cancel operation.</param>
         /// <returns>An <see cref="IAsyncEnumerable{ISdnEntry}"/> that contains all the entries.</returns>
-        IAsyncEnumerable<ISdnEntry> GetSdnEntriesAsync (CancellationToken cancellationToken = default);
+        Task<ISdnDataSet> GetSdnDataAsync (CancellationToken cancellationToken = default);
     }
 }

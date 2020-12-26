@@ -1,6 +1,6 @@
 ﻿using System.Xml;
 
-namespace SdnListMonitor.Core.Abstractions.Service.Xml
+namespace SdnListMonitor.Core.Service.Data.Xml
 {
     /// <summary>
     /// Provides an interface for instantiating <see cref="XmlReader"/>.
