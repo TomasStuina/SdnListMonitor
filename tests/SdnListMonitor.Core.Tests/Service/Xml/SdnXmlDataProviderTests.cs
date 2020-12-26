@@ -50,6 +50,7 @@ namespace SdnListMonitor.Core.Tests.Service
             m_options.Value.XmlFilePath = Guid.NewGuid ().ToString ();
             var xmlReader = new Mock<XmlReader> ();
             xmlReader.Setup (self => self.ReadToDescendant (It.IsAny<string> ())).Returns (true);
+            xmlReader.Setup (self => self.EOF).Returns (true);
             var xmlReaderFactory = CreateXmlReaderFactory (xmlReader.Object);
             var sdnXmlDataProvider = new SdnXmlDataProvider (xmlReaderFactory, m_options);
 
@@ -69,6 +70,7 @@ namespace SdnListMonitor.Core.Tests.Service
             // Arrange
             var xmlReader = new Mock<XmlReader> ();
             xmlReader.Setup (self => self.ReadToDescendant (It.IsAny<string> ())).Returns (true);
+            xmlReader.Setup (self => self.EOF).Returns (true);
             var xmlReaderFactory = CreateXmlReaderFactory (xmlReader.Object);
             var sdnXmlDataProvider = new SdnXmlDataProvider (xmlReaderFactory, m_options);
 
@@ -135,11 +137,16 @@ namespace SdnListMonitor.Core.Tests.Service
         public async Task GetSdnEntriesAsync_WhenSdnListContainsSdnEntries_ShouldReturnSdnEntries ()
         {
             // Arrange
-            var expectedSdnEntries = new[] { new SdnXmlEntry { Uid = 1 }, new SdnXmlEntry { Uid = 2 }, new SdnXmlEntry { Uid = 3 } };
+            var expectedSdnEntries = new[] 
+                {
+                new SdnXmlEntry { Uid = 1 },
+                new SdnXmlEntry { Uid = 2 },
+                new SdnXmlEntry { Uid = 3 },
+                };
             var sdnListXml = CreateSdnListXElement (expectedSdnEntries);
-            var str = sdnListXml.ToString ();
-            var stream = CreateStreamFromString (str);
-            var xmlReader = XmlReader.Create (stream, new XmlReaderSettings { Async = true });
+            var stream = CreateStreamFromString (sdnListXml.ToString ());
+            var xmLReaderSettings = new XmlReaderSettings { Async = true, IgnoreComments = true, IgnoreWhitespace = true };
+            var xmlReader = XmlReader.Create (stream, xmLReaderSettings);
             var xmlReaderFactory = CreateXmlReaderFactory (xmlReader);
             var sdnXmlDataProvider = new SdnXmlDataProvider (xmlReaderFactory, m_options);
 
@@ -207,6 +214,7 @@ namespace SdnListMonitor.Core.Tests.Service
             // Arrange
             var xmlReader = new Mock<XmlReader> ();
             xmlReader.Setup (self => self.ReadToDescendant (It.IsAny<string> ())).Returns (true);
+            xmlReader.Setup (self => self.EOF).Returns (true);
             var disposableXmlReader = xmlReader.As<IDisposable> ();
             var xmlReaderFactory = CreateXmlReaderFactory (xmlReader.Object);
             var sdnXmlDataProvider = new SdnXmlDataProvider (xmlReaderFactory, m_options);
