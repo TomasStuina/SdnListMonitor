@@ -1,7 +1,7 @@
 ﻿using Moq;
-using SdnListMonitor.Core.Abstractions.Model;
-using SdnListMonitor.Core.Abstractions.Service.Data;
-using SdnListMonitor.Core.Model.Xml;
+using SdnListMonitor.Core.Abstractions.Data;
+using SdnListMonitor.Core.Abstractions.Data.Model;
+using SdnListMonitor.Core.Data;
 using SdnListMonitor.Core.Service.Data;
 using Shouldly;
 using System;
@@ -13,6 +13,13 @@ namespace SdnListMonitor.Core.Tests.Service.Data
 {
     public class SdnDataSymmetryCheckerTests
     {
+        private IComparer<ISdnEntry> m_comparer;
+
+        public SdnDataSymmetryCheckerTests ()
+        {
+            m_comparer = new AscendingByUidComparer ();
+        }
+
         [Fact]
         public void Ctor_WhenEntryEqualityComparerNull_ShouldThrowArgumentNullException ()
         {
@@ -31,7 +38,7 @@ namespace SdnListMonitor.Core.Tests.Service.Data
 
             // Act & Assert
             Should.Throw<ArgumentNullException> (async () =>
-                await sdnDataSymmetryChecker.CheckForChangesAsync (null, Mock.Of<ISdnDataSet> ()))
+                await sdnDataSymmetryChecker.CheckForChangesAsync (null, Mock.Of<ISdnDataSet> (), m_comparer))
                   .ParamName
                   .ShouldBe ("oldDataSet");
         }
@@ -45,9 +52,23 @@ namespace SdnListMonitor.Core.Tests.Service.Data
 
             // Act & Assert
             Should.Throw<ArgumentNullException> (async () =>
-                await sdnDataSymmetryChecker.CheckForChangesAsync (Mock.Of<ISdnDataSet> (), null))
+                await sdnDataSymmetryChecker.CheckForChangesAsync (Mock.Of<ISdnDataSet> (), null, m_comparer))
                   .ParamName
                   .ShouldBe ("newDataSet");
+        }
+
+        [Fact]
+        public void CheckForChangesAsync_WhenComparerNull_ShouldShouldThrowArgumentNullException ()
+        {
+            // Arrange
+            var entryEqualityComparer = Mock.Of<IEqualityComparer<ISdnEntry>> ();
+            var sdnDataSymmetryChecker = new SdnDataSymmetryChecker (entryEqualityComparer);
+
+            // Act & Assert
+            Should.Throw<ArgumentNullException> (async () =>
+                await sdnDataSymmetryChecker.CheckForChangesAsync (Mock.Of<ISdnDataSet> (), Mock.Of<ISdnDataSet> (), null))
+                  .ParamName
+                  .ShouldBe ("comparer");
         }
 
         [Fact]
@@ -60,7 +81,7 @@ namespace SdnListMonitor.Core.Tests.Service.Data
             var sdnDataSymmetryChecker = new SdnDataSymmetryChecker (entryEqualityComparer);
 
             // Act
-            var result = await sdnDataSymmetryChecker.CheckForChangesAsync (oldDataSet, newDataSet);
+            var result = await sdnDataSymmetryChecker.CheckForChangesAsync (oldDataSet, newDataSet, m_comparer);
 
             // Assert
             result.DataChanged.ShouldBeFalse ();
@@ -74,12 +95,12 @@ namespace SdnListMonitor.Core.Tests.Service.Data
         {
             // Arrange
             var oldDataSet = CreateSdnDataSet ();
-            var newDataSet = CreateSdnDataSet (new SdnXmlEntry { Uid = 1 });
+            var newDataSet = CreateSdnDataSet (new TestXmlEntry { Uid = 1 });
             var entryEqualityComparer = Mock.Of<IEqualityComparer<ISdnEntry>> ();
             var sdnDataSymmetryChecker = new SdnDataSymmetryChecker (entryEqualityComparer);
 
             // Act
-            var result = await sdnDataSymmetryChecker.CheckForChangesAsync (oldDataSet, newDataSet);
+            var result = await sdnDataSymmetryChecker.CheckForChangesAsync (oldDataSet, newDataSet, m_comparer);
 
             // Assert
             result.DataChanged.ShouldBeTrue ();
@@ -90,13 +111,13 @@ namespace SdnListMonitor.Core.Tests.Service.Data
         public async Task CheckForChangesAsync_WhenEntryWithNewUidAddedAtTheStart_ShouldReturnAddedResult ()
         {
             // Arrange
-            var oldDataSet = CreateSdnDataSet (new SdnXmlEntry { Uid = 2 });
-            var newDataSet = CreateSdnDataSet (new SdnXmlEntry { Uid = 1 }, new SdnXmlEntry { Uid = 2 });
+            var oldDataSet = CreateSdnDataSet (new TestXmlEntry { Uid = 2 });
+            var newDataSet = CreateSdnDataSet (new TestXmlEntry { Uid = 1 }, new TestXmlEntry { Uid = 2 });
             var entryEqualityComparer = Mock.Of<IEqualityComparer<ISdnEntry>> ();
             var sdnDataSymmetryChecker = new SdnDataSymmetryChecker (entryEqualityComparer);
 
             // Act
-            var result = await sdnDataSymmetryChecker.CheckForChangesAsync (oldDataSet, newDataSet);
+            var result = await sdnDataSymmetryChecker.CheckForChangesAsync (oldDataSet, newDataSet, m_comparer);
 
             // Assert
             result.DataChanged.ShouldBeTrue ();
@@ -107,13 +128,13 @@ namespace SdnListMonitor.Core.Tests.Service.Data
         public async Task CheckForChangesAsync_WhenEntryWithNewUidAddedInBetween_ShouldReturnAddedResult ()
         {
             // Arrange
-            var oldDataSet = CreateSdnDataSet (new SdnXmlEntry { Uid = 1 }, new SdnXmlEntry { Uid = 3 });
-            var newDataSet = CreateSdnDataSet (new SdnXmlEntry { Uid = 1 }, new SdnXmlEntry { Uid = 2 }, new SdnXmlEntry { Uid = 3 });
+            var oldDataSet = CreateSdnDataSet (new TestXmlEntry { Uid = 1 }, new TestXmlEntry { Uid = 3 });
+            var newDataSet = CreateSdnDataSet (new TestXmlEntry { Uid = 1 }, new TestXmlEntry { Uid = 2 }, new TestXmlEntry { Uid = 3 });
             var entryEqualityComparer = Mock.Of<IEqualityComparer<ISdnEntry>> ();
             var sdnDataSymmetryChecker = new SdnDataSymmetryChecker (entryEqualityComparer);
 
             // Act
-            var result = await sdnDataSymmetryChecker.CheckForChangesAsync (oldDataSet, newDataSet);
+            var result = await sdnDataSymmetryChecker.CheckForChangesAsync (oldDataSet, newDataSet, m_comparer);
 
             // Assert
             result.DataChanged.ShouldBeTrue ();
@@ -124,13 +145,13 @@ namespace SdnListMonitor.Core.Tests.Service.Data
         public async Task CheckForChangesAsync_WhenEntriesWithNewUidAddedAtTheEnd_ShouldReturnAddedResult ()
         {
             // Arrange
-            var oldDataSet = CreateSdnDataSet (new SdnXmlEntry { Uid = 1 });
-            var newDataSet = CreateSdnDataSet (new SdnXmlEntry { Uid = 1 }, new SdnXmlEntry { Uid = 2 }, new SdnXmlEntry { Uid = 3 });
+            var oldDataSet = CreateSdnDataSet (new TestXmlEntry { Uid = 1 });
+            var newDataSet = CreateSdnDataSet (new TestXmlEntry { Uid = 1 }, new TestXmlEntry { Uid = 2 }, new TestXmlEntry { Uid = 3 });
             var entryEqualityComparer = Mock.Of<IEqualityComparer<ISdnEntry>> ();
             var sdnDataSymmetryChecker = new SdnDataSymmetryChecker (entryEqualityComparer);
 
             // Act
-            var result = await sdnDataSymmetryChecker.CheckForChangesAsync (oldDataSet, newDataSet);
+            var result = await sdnDataSymmetryChecker.CheckForChangesAsync (oldDataSet, newDataSet, m_comparer);
 
             // Assert
             result.DataChanged.ShouldBeTrue ();
@@ -141,13 +162,13 @@ namespace SdnListMonitor.Core.Tests.Service.Data
         public async Task CheckForChangesAsync_WhenEntryWithUidRemoved_ShouldReturnRemovedResult ()
         {
             // Arrange
-            var oldDataSet = CreateSdnDataSet (new SdnXmlEntry { Uid = 1 });
+            var oldDataSet = CreateSdnDataSet (new TestXmlEntry { Uid = 1 });
             var newDataSet = CreateSdnDataSet ();
             var entryEqualityComparer = Mock.Of<IEqualityComparer<ISdnEntry>> ();
             var sdnDataSymmetryChecker = new SdnDataSymmetryChecker (entryEqualityComparer);
 
             // Act
-            var result = await sdnDataSymmetryChecker.CheckForChangesAsync (oldDataSet, newDataSet);
+            var result = await sdnDataSymmetryChecker.CheckForChangesAsync (oldDataSet, newDataSet, m_comparer);
 
             // Assert
             result.DataChanged.ShouldBeTrue ();
@@ -158,13 +179,13 @@ namespace SdnListMonitor.Core.Tests.Service.Data
         public async Task CheckForChangesAsync_WhenEntryWithUidRemovedAtTheStart_ShouldReturnRemovedResult ()
         {
             // Arrange
-            var oldDataSet = CreateSdnDataSet (new SdnXmlEntry { Uid = 1 }, new SdnXmlEntry { Uid = 2 });
-            var newDataSet = CreateSdnDataSet (new SdnXmlEntry { Uid = 2 });
+            var oldDataSet = CreateSdnDataSet (new TestXmlEntry { Uid = 1 }, new TestXmlEntry { Uid = 2 });
+            var newDataSet = CreateSdnDataSet (new TestXmlEntry { Uid = 2 });
             var entryEqualityComparer = Mock.Of<IEqualityComparer<ISdnEntry>> ();
             var sdnDataSymmetryChecker = new SdnDataSymmetryChecker (entryEqualityComparer);
 
             // Act
-            var result = await sdnDataSymmetryChecker.CheckForChangesAsync (oldDataSet, newDataSet);
+            var result = await sdnDataSymmetryChecker.CheckForChangesAsync (oldDataSet, newDataSet, m_comparer);
 
             // Assert
             result.DataChanged.ShouldBeTrue ();
@@ -175,13 +196,13 @@ namespace SdnListMonitor.Core.Tests.Service.Data
         public async Task CheckForChangesAsync_WhenEntryWithUidRemovedInBetween_ShouldReturnRemovedResult ()
         {
             // Arrange
-            var oldDataSet = CreateSdnDataSet (new SdnXmlEntry { Uid = 1 }, new SdnXmlEntry { Uid = 2 }, new SdnXmlEntry { Uid = 3 });
-            var newDataSet = CreateSdnDataSet (new SdnXmlEntry { Uid = 1 }, new SdnXmlEntry { Uid = 3 });
+            var oldDataSet = CreateSdnDataSet (new TestXmlEntry { Uid = 1 }, new TestXmlEntry { Uid = 2 }, new TestXmlEntry { Uid = 3 });
+            var newDataSet = CreateSdnDataSet (new TestXmlEntry { Uid = 1 }, new TestXmlEntry { Uid = 3 });
             var entryEqualityComparer = Mock.Of<IEqualityComparer<ISdnEntry>> ();
             var sdnDataSymmetryChecker = new SdnDataSymmetryChecker (entryEqualityComparer);
 
             // Act
-            var result = await sdnDataSymmetryChecker.CheckForChangesAsync (oldDataSet, newDataSet);
+            var result = await sdnDataSymmetryChecker.CheckForChangesAsync (oldDataSet, newDataSet, m_comparer);
 
             // Assert
             result.DataChanged.ShouldBeTrue ();
@@ -189,11 +210,28 @@ namespace SdnListMonitor.Core.Tests.Service.Data
         }
 
         [Fact]
+        public async Task CheckForChangesAsync_WhenEntriesWithUidRemovedAtTheEnd_ShouldReturnRemovedResult ()
+        {
+            // Arrange
+            var oldDataSet = CreateSdnDataSet (new TestXmlEntry { Uid = 1 }, new TestXmlEntry { Uid = 2 }, new TestXmlEntry { Uid = 3 });
+            var newDataSet = CreateSdnDataSet (new TestXmlEntry { Uid = 1 });
+            var entryEqualityComparer = Mock.Of<IEqualityComparer<ISdnEntry>> ();
+            var sdnDataSymmetryChecker = new SdnDataSymmetryChecker (entryEqualityComparer);
+
+            // Act
+            var result = await sdnDataSymmetryChecker.CheckForChangesAsync (oldDataSet, newDataSet, m_comparer);
+
+            // Assert
+            result.DataChanged.ShouldBeTrue ();
+            result.EntriesRemoved.ShouldBe (2);
+        }
+
+        [Fact]
         public async Task CheckForChangesAsync_WhenEntriesWithSameUidAreNotEqual_ShouldReturnModifiedResult ()
         {
             // Arrange
-            var entryFromOld = new SdnXmlEntry { Uid = 1 };
-            var entryFromNew = new SdnXmlEntry { Uid = 1 };
+            var entryFromOld = new TestXmlEntry { Uid = 1 };
+            var entryFromNew = new TestXmlEntry { Uid = 1 };
             var oldDataSet = CreateSdnDataSet (entryFromOld);
             var newDataSet = CreateSdnDataSet (entryFromNew);
             var entryEqualityComparer = new Mock<IEqualityComparer<ISdnEntry>> ();
@@ -202,7 +240,91 @@ namespace SdnListMonitor.Core.Tests.Service.Data
             var sdnDataSymmetryChecker = new SdnDataSymmetryChecker (entryEqualityComparer.Object);
 
             // Act
-            var result = await sdnDataSymmetryChecker.CheckForChangesAsync (oldDataSet, newDataSet);
+            var result = await sdnDataSymmetryChecker.CheckForChangesAsync (oldDataSet, newDataSet, m_comparer);
+
+            // Assert
+            result.DataChanged.ShouldBeTrue ();
+            result.EntriesModified.ShouldBe (1);
+        }
+
+        [Fact]
+        public async Task CheckForChangesAsync_WhenEntriesWithSameUidAtTheStartAreNotEqual_ShouldReturnModifiedResult ()
+        {
+            // Arrange
+            var entryFromOld = new TestXmlEntry { Uid = 1 };
+            var entryFromNew = new TestXmlEntry { Uid = 1 };
+            var oldDataSet = CreateSdnDataSet (entryFromOld, new TestXmlEntry { Uid = 2 });
+            var newDataSet = CreateSdnDataSet (entryFromNew, new TestXmlEntry { Uid = 3 });
+            var entryEqualityComparer = new Mock<IEqualityComparer<ISdnEntry>> ();
+            entryEqualityComparer.Setup (self => self.Equals (entryFromOld, entryFromNew)).Returns (false);
+
+            var sdnDataSymmetryChecker = new SdnDataSymmetryChecker (entryEqualityComparer.Object);
+
+            // Act
+            var result = await sdnDataSymmetryChecker.CheckForChangesAsync (oldDataSet, newDataSet, m_comparer);
+
+            // Assert
+            result.DataChanged.ShouldBeTrue ();
+            result.EntriesModified.ShouldBe (1);
+        }
+
+        [Fact]
+        public async Task CheckForChangesAsync_WhenEntriesWithSameUidInBetweenAreNotEqual_ShouldReturnModifiedResult ()
+        {
+            // Arrange
+            var entryFromOld = new TestXmlEntry { Uid = 3 };
+            var entryFromNew = new TestXmlEntry { Uid = 3 };
+            var oldDataSet = CreateSdnDataSet (new TestXmlEntry { Uid = 1 }, entryFromOld, new TestXmlEntry { Uid = 4 });
+            var newDataSet = CreateSdnDataSet (new TestXmlEntry { Uid = 2 }, entryFromNew, new TestXmlEntry { Uid = 5 });
+            var entryEqualityComparer = new Mock<IEqualityComparer<ISdnEntry>> ();
+            entryEqualityComparer.Setup (self => self.Equals (entryFromOld, entryFromNew)).Returns (false);
+
+            var sdnDataSymmetryChecker = new SdnDataSymmetryChecker (entryEqualityComparer.Object);
+
+            // Act
+            var result = await sdnDataSymmetryChecker.CheckForChangesAsync (oldDataSet, newDataSet, m_comparer);
+
+            // Assert
+            result.DataChanged.ShouldBeTrue ();
+            result.EntriesModified.ShouldBe (1);
+        }
+
+        [Fact]
+        public async Task CheckForChangesAsync_WhenEntriesWithSameUidAtTheEndAreNotEqual_ShouldReturnModifiedResult ()
+        {
+            // Arrange
+            var entryFromOld = new TestXmlEntry { Uid = 3 };
+            var entryFromNew = new TestXmlEntry { Uid = 3 };
+            var oldDataSet = CreateSdnDataSet (new TestXmlEntry { Uid = 1 }, entryFromOld);
+            var newDataSet = CreateSdnDataSet (new TestXmlEntry { Uid = 2 }, entryFromNew);
+            var entryEqualityComparer = new Mock<IEqualityComparer<ISdnEntry>> ();
+            entryEqualityComparer.Setup (self => self.Equals (entryFromOld, entryFromNew)).Returns (false);
+
+            var sdnDataSymmetryChecker = new SdnDataSymmetryChecker (entryEqualityComparer.Object);
+
+            // Act
+            var result = await sdnDataSymmetryChecker.CheckForChangesAsync (oldDataSet, newDataSet, m_comparer);
+
+            // Assert
+            result.DataChanged.ShouldBeTrue ();
+            result.EntriesModified.ShouldBe (1);
+        }
+
+        [Fact]
+        public async Task CheckForChangesAsync_WhenEntriesWithSameUidInDifferentPositionsAreNotEqual_ShouldReturnModifiedResult ()
+        {
+            // Arrange
+            var entryFromOld = new TestXmlEntry { Uid = 4 };
+            var entryFromNew = new TestXmlEntry { Uid = 4 };
+            var oldDataSet = CreateSdnDataSet (new TestXmlEntry { Uid = 1 }, entryFromOld);
+            var newDataSet = CreateSdnDataSet (new TestXmlEntry { Uid = 2 }, new TestXmlEntry { Uid = 3 }, entryFromNew);
+            var entryEqualityComparer = new Mock<IEqualityComparer<ISdnEntry>> ();
+            entryEqualityComparer.Setup (self => self.Equals (entryFromOld, entryFromNew)).Returns (false);
+
+            var sdnDataSymmetryChecker = new SdnDataSymmetryChecker (entryEqualityComparer.Object);
+
+            // Act
+            var result = await sdnDataSymmetryChecker.CheckForChangesAsync (oldDataSet, newDataSet, m_comparer);
 
             // Assert
             result.DataChanged.ShouldBeTrue ();
@@ -213,8 +335,8 @@ namespace SdnListMonitor.Core.Tests.Service.Data
         public async Task CheckForChangesAsync_WhenEntriesWithSameUidAreEqual_ShouldReturnDataChangedFalse ()
         {
             // Arrange
-            var entryFromOld = new SdnXmlEntry { Uid = 1 };
-            var entryFromNew = new SdnXmlEntry { Uid = 1 };
+            var entryFromOld = new TestXmlEntry { Uid = 1 };
+            var entryFromNew = new TestXmlEntry { Uid = 1 };
             var oldDataSet = CreateSdnDataSet (entryFromOld);
             var newDataSet = CreateSdnDataSet (entryFromNew);
             var entryEqualityComparer = new Mock<IEqualityComparer<ISdnEntry>> ();
@@ -223,7 +345,7 @@ namespace SdnListMonitor.Core.Tests.Service.Data
             var sdnDataSymmetryChecker = new SdnDataSymmetryChecker (entryEqualityComparer.Object);
 
             // Act
-            var result = await sdnDataSymmetryChecker.CheckForChangesAsync (oldDataSet, newDataSet);
+            var result = await sdnDataSymmetryChecker.CheckForChangesAsync (oldDataSet, newDataSet, m_comparer);
 
             // Assert
             result.DataChanged.ShouldBeFalse ();
@@ -231,33 +353,34 @@ namespace SdnListMonitor.Core.Tests.Service.Data
         }
 
         [Fact]
-        public async Task CheckForChangesAsync_WhenEntriesWithUidRemovedAtTheEnd_ShouldReturnRemovedResult ()
+        public async Task CheckForChangesAsync_WhenEntryWithNewUidReplacesAnotherOne_ShouldReturnAddedAndRemovedResult ()
         {
             // Arrange
-            var oldDataSet = CreateSdnDataSet (new SdnXmlEntry { Uid = 1 }, new SdnXmlEntry { Uid = 2 }, new SdnXmlEntry { Uid = 3 });
-            var newDataSet = CreateSdnDataSet (new SdnXmlEntry { Uid = 1 });
+            var oldDataSet = CreateSdnDataSet (new TestXmlEntry { Uid = 2 });
+            var newDataSet = CreateSdnDataSet (new TestXmlEntry { Uid = 1 });
             var entryEqualityComparer = Mock.Of<IEqualityComparer<ISdnEntry>> ();
             var sdnDataSymmetryChecker = new SdnDataSymmetryChecker (entryEqualityComparer);
 
             // Act
-            var result = await sdnDataSymmetryChecker.CheckForChangesAsync (oldDataSet, newDataSet);
+            var result = await sdnDataSymmetryChecker.CheckForChangesAsync (oldDataSet, newDataSet, m_comparer);
 
             // Assert
             result.DataChanged.ShouldBeTrue ();
-            result.EntriesRemoved.ShouldBe (2);
+            result.EntriesAdded.ShouldBe (1);
+            result.EntriesRemoved.ShouldBe (1);
         }
 
         [Fact]
         public async Task CheckForChangesAsync_WhenEntryWithNewUidReplacesOneAtTheStart_ShouldReturnAddedAndRemovedResult ()
         {
             // Arrange
-            var oldDataSet = CreateSdnDataSet (new SdnXmlEntry { Uid = 2 }, new SdnXmlEntry { Uid = 3 });
-            var newDataSet = CreateSdnDataSet (new SdnXmlEntry { Uid = 1 }, new SdnXmlEntry { Uid = 3 });
+            var oldDataSet = CreateSdnDataSet (new TestXmlEntry { Uid = 2 }, new TestXmlEntry { Uid = 3 });
+            var newDataSet = CreateSdnDataSet (new TestXmlEntry { Uid = 1 }, new TestXmlEntry { Uid = 3 });
             var entryEqualityComparer = Mock.Of<IEqualityComparer<ISdnEntry>> ();
             var sdnDataSymmetryChecker = new SdnDataSymmetryChecker (entryEqualityComparer);
 
             // Act
-            var result = await sdnDataSymmetryChecker.CheckForChangesAsync (oldDataSet, newDataSet);
+            var result = await sdnDataSymmetryChecker.CheckForChangesAsync (oldDataSet, newDataSet, m_comparer);
 
             // Assert
             result.DataChanged.ShouldBeTrue ();
@@ -269,13 +392,13 @@ namespace SdnListMonitor.Core.Tests.Service.Data
         public async Task CheckForChangesAsync_WhenEntryWithNewUidReplacesOneInBetween_ShouldReturnAddedAndRemovedResult ()
         {
             // Arrange
-            var oldDataSet = CreateSdnDataSet (new SdnXmlEntry { Uid = 1 }, new SdnXmlEntry { Uid = 2 }, new SdnXmlEntry { Uid = 4 });
-            var newDataSet = CreateSdnDataSet (new SdnXmlEntry { Uid = 1 }, new SdnXmlEntry { Uid = 3 }, new SdnXmlEntry { Uid = 4 });
+            var oldDataSet = CreateSdnDataSet (new TestXmlEntry { Uid = 1 }, new TestXmlEntry { Uid = 2 }, new TestXmlEntry { Uid = 4 });
+            var newDataSet = CreateSdnDataSet (new TestXmlEntry { Uid = 1 }, new TestXmlEntry { Uid = 3 }, new TestXmlEntry { Uid = 4 });
             var entryEqualityComparer = Mock.Of<IEqualityComparer<ISdnEntry>> ();
             var sdnDataSymmetryChecker = new SdnDataSymmetryChecker (entryEqualityComparer);
 
             // Act
-            var result = await sdnDataSymmetryChecker.CheckForChangesAsync (oldDataSet, newDataSet);
+            var result = await sdnDataSymmetryChecker.CheckForChangesAsync (oldDataSet, newDataSet, m_comparer);
 
             // Assert
             result.DataChanged.ShouldBeTrue ();
@@ -283,7 +406,55 @@ namespace SdnListMonitor.Core.Tests.Service.Data
             result.EntriesRemoved.ShouldBe (1);
         }
 
+        [Fact]
+        public async Task CheckForChangesAsync_WhenEntryWithNewUidReplacesOneAtTheEnd_ShouldReturnAddedAndRemovedResult ()
+        {
+            // Arrange
+            var oldDataSet = CreateSdnDataSet (new TestXmlEntry { Uid = 1 }, new TestXmlEntry { Uid = 2 });
+            var newDataSet = CreateSdnDataSet (new TestXmlEntry { Uid = 1 }, new TestXmlEntry { Uid = 3 });
+            var entryEqualityComparer = Mock.Of<IEqualityComparer<ISdnEntry>> ();
+            var sdnDataSymmetryChecker = new SdnDataSymmetryChecker (entryEqualityComparer);
+
+            // Act
+            var result = await sdnDataSymmetryChecker.CheckForChangesAsync (oldDataSet, newDataSet, m_comparer);
+
+            // Assert
+            result.DataChanged.ShouldBeTrue ();
+            result.EntriesAdded.ShouldBe (1);
+            result.EntriesRemoved.ShouldBe (1);
+        }
+
+        [Fact]
+        public async Task CheckForChangesAsync_WhenNewSdnDataHasAddedRemovedAndModifiedEntries_ShouldReturnAddedRemovedAndModifiedResult ()
+        {
+            // Arrange
+            var oldDataSet = CreateSdnDataSet (new TestXmlEntry { Uid = 1 }, new TestXmlEntry { Uid = 2 });
+            var newDataSet = CreateSdnDataSet (new TestXmlEntry { Uid = 2 }, new TestXmlEntry { Uid = 4 });
+            var entryEqualityComparer = new Mock<IEqualityComparer<ISdnEntry>> ();
+            entryEqualityComparer.Setup (self => self.Equals (It.IsAny<ISdnEntry> (), It.IsAny<ISdnEntry> ())).Returns (false);
+            var sdnDataSymmetryChecker = new SdnDataSymmetryChecker (entryEqualityComparer.Object);
+
+            // Act
+            var result = await sdnDataSymmetryChecker.CheckForChangesAsync (oldDataSet, newDataSet, m_comparer);
+
+            // Assert
+            result.DataChanged.ShouldBeTrue ();
+            result.EntriesAdded.ShouldBe (1);
+            result.EntriesRemoved.ShouldBe (1);
+            result.EntriesModified.ShouldBe (1);
+        }
+
         private static ISdnDataSet CreateSdnDataSet (params ISdnEntry[] sdnEntries) =>
             Mock.Of<ISdnDataSet> (self => self.Entries == sdnEntries);
+
+        private class TestXmlEntry : ISdnEntry
+        {
+            public int Uid { get; set; }
+            public string FirstName { get; set; }
+            public string LastName { get; set; }
+            public string Title { get; set; }
+            public string SdnType { get; set; }
+            public string Remarks { get; set; }
+        }
     }
 }
