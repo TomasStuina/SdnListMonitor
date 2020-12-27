@@ -21,16 +21,24 @@ namespace SdnListMonitor.Core.Xml.Service.Data
     /// from SDN.xml file that corresponds to the format defined in SDN.xsd schema file
     /// (https://home.treasury.gov/system/files/126/sdn.xsd).
     /// </summary>
-    public class SdnXmlDataProvider : ISdnDataProvider
+    public class SdnXmlDataRetriever : ISdnDataRetriever
     {
         private readonly IXmlReaderFactory m_xmlReaderFactory;
-        private readonly SdnXmlDataProviderOptions m_options;
+        private readonly IComparer<ISdnEntry> m_entriesComparer;
+        private readonly SdnXmlDataRetrieverOptions m_options;
         private readonly XmlSerializer m_xmlSerializer;
         private readonly XmlReaderSettings m_xmlReaderSettings;
 
-        public SdnXmlDataProvider (IXmlReaderFactory xmlReaderFactory, IOptions<SdnXmlDataProviderOptions> options)
+        /// <summary>
+        /// Instantiates <see cref="SdnXmlDataRetriever"/>.
+        /// </summary>
+        /// <param name="xmlReaderFactory">XML reader factory to instantiate <see cref="XmlReader"/>.</param>
+        /// <param name="entriesComparer">The comparer to use in sorting the entries.</param>
+        /// <param name="options">Options to control this provider.</param>
+        public SdnXmlDataRetriever (IXmlReaderFactory xmlReaderFactory, IComparer<ISdnEntry> entriesComparer, IOptions<SdnXmlDataRetrieverOptions> options)
         {
             m_xmlReaderFactory = xmlReaderFactory.ThrowIfNull (nameof (xmlReaderFactory));
+            m_entriesComparer = entriesComparer.ThrowIfNull (nameof (entriesComparer));
             m_options = options.ThrowIfNull (nameof (options)).Value;
             m_xmlSerializer = new XmlSerializer (typeof (SdnXmlEntry), SdnXmlDefaultNamespace);
             m_xmlReaderSettings = new XmlReaderSettings { Async = true, IgnoreWhitespace = true, IgnoreComments = true };
@@ -44,12 +52,11 @@ namespace SdnListMonitor.Core.Xml.Service.Data
         /// SDN List entries as we go, instead of loading the whole SDN XML tree to the memory and then processing it.
         /// Though, this also depends how much of the data is being buffered by the underlying stream in XML reader.
         /// </remarks>
-        /// <param name="comparer">The comparer to use in sorting the entries.</param>
         /// <param name="cancellationToken">The cancellation token to cancel operation.</param>
         /// <returns>An <see cref="IAsyncEnumerable{ISdnEntry}"/> that contains all the entries.</returns>
-        public async Task<ISdnDataSet> GetSdnDataAsync (IComparer<ISdnEntry> comparer, CancellationToken cancellationToken = default)
+        public async Task<ISdnDataSet> GetSdnDataAsync (CancellationToken cancellationToken = default)
         {
-            var snapshot = await SortedSdnDataSet.CreateAsync (GetSdnEntriesAsync (cancellationToken), comparer.ThrowIfNull (nameof (comparer)));
+            var snapshot = await SortedSdnDataSet.CreateAsync (GetSdnEntriesAsync (cancellationToken), m_entriesComparer);
             return snapshot;
         }
 

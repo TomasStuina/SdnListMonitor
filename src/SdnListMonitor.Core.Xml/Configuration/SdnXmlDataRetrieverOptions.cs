@@ -1,9 +1,9 @@
 ﻿namespace SdnListMonitor.Core.Xml.Configuration
 {
     /// <summary>
-    /// Options for configuring <see cref="SdnXmlDataProvider"/>.
+    /// Options for configuring <see cref="SdnXmlDataRetriever"/>.
     /// </summary>
-    public class SdnXmlDataProviderOptions
+    public class SdnXmlDataRetrieverOptions
     {
         /// <summary>
         /// The path where Specially Designated Nationals List XML file is located.

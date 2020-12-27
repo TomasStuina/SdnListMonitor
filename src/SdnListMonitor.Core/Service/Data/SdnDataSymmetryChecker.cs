@@ -16,16 +16,19 @@ namespace SdnListMonitor.Core.Service.Data
     /// </remarks>
     public class SdnDataSymmetryChecker : ISdnDataChangesChecker
     {
+        private readonly IComparer<ISdnEntry> m_dataSetEntryComparer;
         private readonly IEqualityComparer<ISdnEntry> m_entryEqualityComparer;
 
         /// <summary>
         /// Instantiates <see cref="SdnDataSymmetryChecker"/>.
         /// </summary>
+        /// <param name="dataSetEntryComparer">A comparer that describes the symmetry between both data sets.</param>
         /// <param name="entryEqualityComparer">
         /// An equality comparer for a deeper comparison when two entries are considered equal in a shallow comparison.
         /// </param>
-        public SdnDataSymmetryChecker (IEqualityComparer<ISdnEntry> entryEqualityComparer)
+        public SdnDataSymmetryChecker (IComparer<ISdnEntry> dataSetEntryComparer, IEqualityComparer<ISdnEntry> entryEqualityComparer)
         {
+            m_dataSetEntryComparer = dataSetEntryComparer.ThrowIfNull (nameof (dataSetEntryComparer));
             m_entryEqualityComparer = entryEqualityComparer.ThrowIfNull (nameof (entryEqualityComparer));
         }
 
@@ -39,11 +42,9 @@ namespace SdnListMonitor.Core.Service.Data
         /// </remarks>
         /// <param name="oldDataSet">The initial SDN entries data set.</param>
         /// <param name="newDataSet">The new SDN entries data set.</param>
-        /// <param name="comparer">A comparer that describes the symmetry between both data sets.</param>
         /// <returns><see cref="Task{SdnDataChangesCheckResult}"/> indicating task completion and a comparison result.</returns>
-        public Task<SdnDataChangesCheckResult> CheckForChangesAsync (ISdnDataSet oldDataSet, ISdnDataSet newDataSet, IComparer<ISdnEntry> comparer)
+        public Task<SdnDataChangesCheckResult> CheckForChangesAsync (ISdnDataSet oldDataSet, ISdnDataSet newDataSet)
         {
-            comparer.ThrowIfNull (nameof (comparer));
             var oldDataSetEnumerator = oldDataSet.ThrowIfNull (nameof (oldDataSet)).Entries.GetEnumerator ();
             var newDataSetEnumerator = newDataSet.ThrowIfNull (nameof (newDataSet)).Entries.GetEnumerator ();
 
@@ -61,7 +62,7 @@ namespace SdnListMonitor.Core.Service.Data
                 var oldDataSetCurrent = oldDataSetEnumerator.Current;
                 var newDataSetCurrent = newDataSetEnumerator.Current;
                 // Perform a shallow comparison, e.g., find the difference between UIDs:
-                int comparisonResult = comparer.Compare (oldDataSetCurrent, newDataSetCurrent);
+                int comparisonResult = m_dataSetEntryComparer.Compare (oldDataSetCurrent, newDataSetCurrent);
                 if (comparisonResult < 0)
                 {
                     // if the entry in the old data set has a lesser UID than the one in the new data set,

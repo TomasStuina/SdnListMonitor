@@ -18,45 +18,42 @@ using Xunit;
 
 namespace SdnListMonitor.Core.Xml.Tests.Service.Data
 {
-    public class SdnXmlDataProviderTests
+    public class SdnXmlDataRetrieverTests
     {
-        private readonly IComparer<ISdnEntry> m_comparer;
-        private readonly IOptions<SdnXmlDataProviderOptions> m_options;
+        private readonly IComparer<ISdnEntry> m_entriesComparer;
+        private readonly IOptions<SdnXmlDataRetrieverOptions> m_options;
 
-        public SdnXmlDataProviderTests ()
+        public SdnXmlDataRetrieverTests ()
         {
-            m_comparer = new AscendingByUidComparer ();
-            m_options = Options.Create (new SdnXmlDataProviderOptions ());
+            m_entriesComparer = new AscendingByUidComparer ();
+            m_options = Options.Create (new SdnXmlDataRetrieverOptions ());
         }
 
         [Fact]
         public void Ctor_WhenXmlReaderFactoryNull_ShouldThrowArgumentNullException ()
         {
             // Act & Assert
-            Should.Throw<ArgumentNullException> (() => new SdnXmlDataProvider (null, m_options))
+            Should.Throw<ArgumentNullException> (() => new SdnXmlDataRetriever (null, m_entriesComparer, m_options))
                   .ParamName
                   .ShouldBe ("xmlReaderFactory");
+        }
+
+        [Fact]
+        public void Ctor_WhenEntriesComparerNull_ShouldThrowArgumentNullException ()
+        {
+            // Act & Assert
+            Should.Throw<ArgumentNullException> (() => new SdnXmlDataRetriever (Mock.Of<IXmlReaderFactory> (), null, m_options))
+                  .ParamName
+                  .ShouldBe ("entriesComparer");
         }
 
         [Fact]
         public void Ctor_WhenOptionsNull_ShouldThrowArgumentNullException ()
         {
             // Act & Assert
-            Should.Throw<ArgumentNullException> (() => new SdnXmlDataProvider (Mock.Of<IXmlReaderFactory> (), null))
+            Should.Throw<ArgumentNullException> (() => new SdnXmlDataRetriever (Mock.Of<IXmlReaderFactory> (), m_entriesComparer, null))
                   .ParamName
                   .ShouldBe ("options");
-        }
-
-        [Fact]
-        public void GetSdnDataAsync_WhenComparerNull_ShouldThrowArgumentNullException ()
-        {
-            // Arrange
-            var sdnXmlDataProvider = new SdnXmlDataProvider (Mock.Of<IXmlReaderFactory> (), m_options);
-
-            // Act & Assert
-            Should.Throw<ArgumentNullException> (async () => await sdnXmlDataProvider.GetSdnDataAsync (null))
-                  .ParamName
-                  .ShouldBe ("comparer");
         }
 
         [Fact]
@@ -68,10 +65,10 @@ namespace SdnListMonitor.Core.Xml.Tests.Service.Data
             xmlReader.Setup (self => self.ReadToDescendant (It.IsAny<string> ())).Returns (true);
             xmlReader.Setup (self => self.EOF).Returns (true);
             var xmlReaderFactory = CreateXmlReaderFactory (xmlReader.Object);
-            var sdnXmlDataProvider = new SdnXmlDataProvider (xmlReaderFactory, m_options);
+            var sdnXmlDataRetriever = new SdnXmlDataRetriever (xmlReaderFactory, m_entriesComparer, m_options);
 
             // Act
-            await sdnXmlDataProvider.GetSdnDataAsync (m_comparer);
+            await sdnXmlDataRetriever.GetSdnDataAsync ();
 
             // Assert
             Mock.Get (xmlReaderFactory).Verify (self => self.Create (
@@ -88,10 +85,10 @@ namespace SdnListMonitor.Core.Xml.Tests.Service.Data
             xmlReader.Setup (self => self.ReadToDescendant (It.IsAny<string> ())).Returns (true);
             xmlReader.Setup (self => self.EOF).Returns (true);
             var xmlReaderFactory = CreateXmlReaderFactory (xmlReader.Object);
-            var sdnXmlDataProvider = new SdnXmlDataProvider (xmlReaderFactory, m_options);
+            var sdnXmlDataRetriever = new SdnXmlDataRetriever (xmlReaderFactory, m_entriesComparer, m_options);
 
             // Act
-            await sdnXmlDataProvider.GetSdnDataAsync (m_comparer);
+            await sdnXmlDataRetriever.GetSdnDataAsync ();
 
             // Assert
             Mock.Get (xmlReaderFactory).Verify (self => self.Create (
@@ -108,10 +105,10 @@ namespace SdnListMonitor.Core.Xml.Tests.Service.Data
             var stream = CreateStreamFromString ("");
             var xmlReader = XmlReader.Create (stream, new XmlReaderSettings { Async = true });
             var xmlReaderFactory = CreateXmlReaderFactory (xmlReader);
-            var sdnXmlDataProvider = new SdnXmlDataProvider (xmlReaderFactory, m_options);
+            var sdnXmlDataRetriever = new SdnXmlDataRetriever (xmlReaderFactory, m_entriesComparer, m_options);
 
             // Act & Assert
-            var exception = Should.Throw<InvalidOperationException> (async () => await sdnXmlDataProvider.GetSdnDataAsync (m_comparer));
+            var exception = Should.Throw<InvalidOperationException> (async () => await sdnXmlDataRetriever.GetSdnDataAsync ());
             exception.Message.ShouldBe ("An error occurred while retrieving SDN List.");
             exception.InnerException.ShouldBeOfType<XmlException> ();
         }
@@ -124,10 +121,10 @@ namespace SdnListMonitor.Core.Xml.Tests.Service.Data
             var stream = CreateStreamFromString (sdnListXml.ToString ());
             var xmlReader = XmlReader.Create (stream, new XmlReaderSettings { Async = true });
             var xmlReaderFactory = CreateXmlReaderFactory (xmlReader);
-            var sdnXmlDataProvider = new SdnXmlDataProvider (xmlReaderFactory, m_options);
+            var sdnXmlDataRetriever = new SdnXmlDataRetriever (xmlReaderFactory, m_entriesComparer, m_options);
 
             // Act
-            Should.Throw<InvalidOperationException> (async () => await sdnXmlDataProvider.GetSdnDataAsync (m_comparer))
+            Should.Throw<InvalidOperationException> (async () => await sdnXmlDataRetriever.GetSdnDataAsync ())
                   .Message
                   .ShouldBe ("An error occurred while retrieving SDN List.");
         }
@@ -140,10 +137,10 @@ namespace SdnListMonitor.Core.Xml.Tests.Service.Data
             var stream = CreateStreamFromString (sdnListXml.ToString ());
             var xmlReader = XmlReader.Create (stream, new XmlReaderSettings { Async = true });
             var xmlReaderFactory = CreateXmlReaderFactory (xmlReader);
-            var sdnXmlDataProvider = new SdnXmlDataProvider (xmlReaderFactory, m_options);
+            var sdnXmlDataRetriever = new SdnXmlDataRetriever (xmlReaderFactory, m_entriesComparer, m_options);
 
             // Act
-            var sdnDataSet = await sdnXmlDataProvider.GetSdnDataAsync (m_comparer);
+            var sdnDataSet = await sdnXmlDataRetriever.GetSdnDataAsync ();
 
             // Assert
             sdnDataSet.Entries.ShouldBeEmpty ();
@@ -164,10 +161,10 @@ namespace SdnListMonitor.Core.Xml.Tests.Service.Data
             var xmLReaderSettings = new XmlReaderSettings { Async = true, IgnoreComments = true, IgnoreWhitespace = true };
             var xmlReader = XmlReader.Create (stream, xmLReaderSettings);
             var xmlReaderFactory = CreateXmlReaderFactory (xmlReader);
-            var sdnXmlDataProvider = new SdnXmlDataProvider (xmlReaderFactory, m_options);
+            var sdnXmlDataRetriever = new SdnXmlDataRetriever (xmlReaderFactory, m_entriesComparer, m_options);
 
             // Act
-            var sdnDataSet = await sdnXmlDataProvider.GetSdnDataAsync (m_comparer);
+            var sdnDataSet = await sdnXmlDataRetriever.GetSdnDataAsync ();
 
             // Assert
             var actualSdnEntries = sdnDataSet.Entries.ToArray ();
@@ -191,10 +188,10 @@ namespace SdnListMonitor.Core.Xml.Tests.Service.Data
             var xmLReaderSettings = new XmlReaderSettings { Async = true, IgnoreComments = true, IgnoreWhitespace = true };
             var xmlReader = XmlReader.Create (stream, xmLReaderSettings);
             var xmlReaderFactory = CreateXmlReaderFactory (xmlReader);
-            var sdnXmlDataProvider = new SdnXmlDataProvider (xmlReaderFactory, m_options);
+            var sdnXmlDataRetriever = new SdnXmlDataRetriever (xmlReaderFactory, m_entriesComparer, m_options);
 
             // Act
-            var sdnDataSet = await sdnXmlDataProvider.GetSdnDataAsync (m_comparer);
+            var sdnDataSet = await sdnXmlDataRetriever.GetSdnDataAsync ();
 
             // Assert
             var actualSdnEntries = sdnDataSet.Entries.ToArray ();
@@ -220,10 +217,10 @@ namespace SdnListMonitor.Core.Xml.Tests.Service.Data
             var stream = CreateStreamFromString (sdnListXml.ToString ());
             var xmlReader = XmlReader.Create (stream, new XmlReaderSettings { Async = true });
             var xmlReaderFactory = CreateXmlReaderFactory (xmlReader);
-            var sdnXmlDataProvider = new SdnXmlDataProvider (xmlReaderFactory, m_options);
+            var sdnXmlDataRetriever = new SdnXmlDataRetriever (xmlReaderFactory, m_entriesComparer, m_options);
 
             // Act
-            var sdnDataSet = await sdnXmlDataProvider.GetSdnDataAsync (m_comparer);
+            var sdnDataSet = await sdnXmlDataRetriever.GetSdnDataAsync ();
 
             // Assert
             var sdnEntry = sdnDataSet.Entries.Single ();
@@ -245,10 +242,10 @@ namespace SdnListMonitor.Core.Xml.Tests.Service.Data
             var stream = CreateStreamFromString (sdnListXml.ToString ());
             var xmlReader = XmlReader.Create (stream, new XmlReaderSettings { Async = true });
             var xmlReaderFactory = CreateXmlReaderFactory (xmlReader);
-            var sdnXmlDataProvider = new SdnXmlDataProvider (xmlReaderFactory, m_options);
+            var sdnXmlDataRetriever = new SdnXmlDataRetriever (xmlReaderFactory, m_entriesComparer, m_options);
 
             // Act & Assert
-            Should.Throw<InvalidOperationException> (async () => await sdnXmlDataProvider.GetSdnDataAsync (m_comparer))
+            Should.Throw<InvalidOperationException> (async () => await sdnXmlDataRetriever.GetSdnDataAsync ())
                   .Message
                   .ShouldBe ("An error occurred while retrieving SDN List.");
         }
@@ -262,10 +259,10 @@ namespace SdnListMonitor.Core.Xml.Tests.Service.Data
             xmlReader.Setup (self => self.EOF).Returns (true);
             var disposableXmlReader = xmlReader.As<IDisposable> ();
             var xmlReaderFactory = CreateXmlReaderFactory (xmlReader.Object);
-            var sdnXmlDataProvider = new SdnXmlDataProvider (xmlReaderFactory, m_options);
+            var sdnXmlDataRetriever = new SdnXmlDataRetriever (xmlReaderFactory, m_entriesComparer, m_options);
 
             // Act
-            await sdnXmlDataProvider.GetSdnDataAsync (m_comparer);
+            await sdnXmlDataRetriever.GetSdnDataAsync ();
 
             // Assert
             disposableXmlReader.Verify (self => self.Dispose (), Times.Once);
