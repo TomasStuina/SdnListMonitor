@@ -111,11 +111,10 @@ namespace SdnListMonitor.Core.Tests.Service.Data
         }
 
         [Fact]
-        public void GetHashCode_WhenSdnEntryNull_ShouldReturnMinusOne ()
+        public void GetHashCode_WhenSdnEntryNull_ShouldReturnZero ()
         {
-            // Arrange
             // Act & Assert
-            m_comparer.GetHashCode (null).ShouldBe (-1);
+            m_comparer.GetHashCode (null).ShouldBe (0);
         }
 
         [Theory]

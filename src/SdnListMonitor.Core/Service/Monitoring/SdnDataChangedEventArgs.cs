@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace SdnListMonitor.Core.Abstractions.Service.Monitoring
+namespace SdnListMonitor.Core.Service.Monitoring
 {
     /// <summary>
     /// Supplies information about a SDN data change event that is being raised.
