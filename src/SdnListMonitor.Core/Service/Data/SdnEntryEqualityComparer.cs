@@ -4,8 +4,17 @@ using System.Collections.Generic;
 
 namespace SdnListMonitor.Core.Service.Data
 {
+    /// <summary>
+    /// Provides an equality comparison of two <see cref="ISdnEntry"/> instances.
+    /// </summary>
     public class SdnEntryEqualityComparer : IEqualityComparer<ISdnEntry>
     {
+        /// <summary>
+        /// Compares the equality of two <see cref="ISdnEntry"/> instances by their properties.
+        /// </summary>
+        /// <param name="first">The first instance to compare against the <paramref name="second"/>.</param>
+        /// <param name="second">The second instance to compare against the <paramref name="first"/>.</param>
+        /// <returns></returns>
         public bool Equals (ISdnEntry first, ISdnEntry second)
         {
             if (first == null && second == null)
@@ -20,7 +29,7 @@ namespace SdnListMonitor.Core.Service.Data
             return true;
         }
 
-        public int GetHashCode (ISdnEntry entry) => entry?.Uid ?? -1;
+        public int GetHashCode (ISdnEntry entry) => entry?.Uid ?? 0;
 
         private bool AreBothEntriesHaveEqualSingleLevelProperties (ISdnEntry first, ISdnEntry second)
         {

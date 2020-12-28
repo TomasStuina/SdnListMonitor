@@ -6,6 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\SdnListMonitor.Core.Xml\SdnListMonitor.Core.Xml.csproj" />
     <ProjectReference Include="..\SdnListMonitor.Core\SdnListMonitor.Core.csproj" />
   </ItemGroup>
 

@@ -1,12 +1,11 @@
 ﻿using SdnListMonitor.Core.Abstractions.Data;
-using SdnListMonitor.Core.Abstractions.Data.Model;
-using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace SdnListMonitor.Core.Abstractions.Service.Data
 {
     /// <summary>
-    /// Provides and interface for comparing two <see cref="ISdnDataSet"/> instances.
+    /// Provides an interface for comparing two <see cref="ISdnDataSet"/> instances.
     /// </summary>
     public interface ISdnDataChangesChecker
     {
@@ -20,8 +19,8 @@ namespace SdnListMonitor.Core.Abstractions.Service.Data
         /// </remarks>
         /// <param name="oldDataSet">The initial SDN entries data set.</param>
         /// <param name="newDataSet">The new SDN entries data set.</param>
-        /// <param name="comparer">A comparer that describes the order in the both data sets.</param>
+        /// <param name="cancellationToken">The cancellation token to cancel operation.</param>
         /// <returns><see cref="Task{SdnDataChangesCheckResult}"/> indicating task completion and a comparison result.</returns>
-        Task<SdnDataChangesCheckResult> CheckForChangesAsync (ISdnDataSet oldDataSet, ISdnDataSet newDataSet, IComparer<ISdnEntry> comparer);
+        Task<ISdnDataChangesCheckResult> CheckForChangesAsync (ISdnDataSet oldDataSet, ISdnDataSet newDataSet, CancellationToken cancellationToken = default);
     }
 }
