@@ -3,6 +3,10 @@ using System.Collections.Generic;
 
 namespace SdnListMonitor.Core.Data
 {
+    /// <summary>
+    /// Compares two <see cref="ISdnEntry"/> instances by their UID's
+    /// in ascending order.
+    /// </summary>
     public class AscendingByUidComparer : IComparer<ISdnEntry>
     {
         public int Compare (ISdnEntry first, ISdnEntry second)

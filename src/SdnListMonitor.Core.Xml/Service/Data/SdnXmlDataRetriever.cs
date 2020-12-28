@@ -54,7 +54,7 @@ namespace SdnListMonitor.Core.Xml.Service.Data
         /// </remarks>
         /// <param name="cancellationToken">The cancellation token to cancel operation.</param>
         /// <returns>An <see cref="IAsyncEnumerable{ISdnEntry}"/> that contains all the entries.</returns>
-        public async Task<ISdnDataSet> GetSdnDataAsync (CancellationToken cancellationToken = default)
+        public async Task<ISdnDataSet> FetchSdnDataAsync (CancellationToken cancellationToken = default)
         {
             var snapshot = await SortedSdnDataSet.CreateAsync (GetSdnEntriesAsync (cancellationToken), m_entriesComparer);
             return snapshot;

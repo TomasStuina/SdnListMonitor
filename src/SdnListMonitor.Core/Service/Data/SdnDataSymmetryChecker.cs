@@ -3,6 +3,7 @@ using SdnListMonitor.Core.Abstractions.Data.Model;
 using SdnListMonitor.Core.Abstractions.Extensions;
 using SdnListMonitor.Core.Abstractions.Service.Data;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace SdnListMonitor.Core.Service.Data
@@ -42,8 +43,9 @@ namespace SdnListMonitor.Core.Service.Data
         /// </remarks>
         /// <param name="oldDataSet">The initial SDN entries data set.</param>
         /// <param name="newDataSet">The new SDN entries data set.</param>
+        /// <param name="cancellationToken">The cancellation token to cancel operation.</param>
         /// <returns><see cref="Task{SdnDataChangesCheckResult}"/> indicating task completion and a comparison result.</returns>
-        public Task<SdnDataChangesCheckResult> CheckForChangesAsync (ISdnDataSet oldDataSet, ISdnDataSet newDataSet)
+        public Task<ISdnDataChangesCheckResult> CheckForChangesAsync (ISdnDataSet oldDataSet, ISdnDataSet newDataSet, CancellationToken cancellationToken = default)
         {
             var oldDataSetEnumerator = oldDataSet.ThrowIfNull (nameof (oldDataSet)).Entries.GetEnumerator ();
             var newDataSetEnumerator = newDataSet.ThrowIfNull (nameof (newDataSet)).Entries.GetEnumerator ();
@@ -51,9 +53,12 @@ namespace SdnListMonitor.Core.Service.Data
             bool oldDataSetNext = oldDataSetEnumerator.MoveNext ();
             bool newDataSetNext = newDataSetEnumerator.MoveNext ();
 
-            int entriesAdded = 0;
-            int entriesRemoved = 0;
-            int entriesModified = 0;
+            // Using LinkedList for O(1) Add and O(1) Count operations.
+            // Also, we will only need to access them consecutively later on,
+            // to save these changes in some persistence instance. 
+            var entriesAdded = new LinkedList<ISdnEntry> ();
+            var entriesRemoved = new LinkedList<ISdnEntry> ();
+            var entriesModified = new LinkedList<ISdnEntry> ();
 
             // Enumerate both SDN entry sets side by side until one of the enumerators reaches the end.
             // For the sake of example, we will assume here that both SDN entry sets are compared in ascending order by the UID.
@@ -69,7 +74,7 @@ namespace SdnListMonitor.Core.Service.Data
                     // then this entry does not exist in the new data set. For example:
                     // old data set: 1 2 3
                     // new data set: 2 3
-                    entriesRemoved++;
+                    entriesRemoved.AddLast (oldDataSetCurrent);
                     // Only move the enumerator of the old data set to catch up with the new data set:
                     oldDataSetNext = oldDataSetEnumerator.MoveNext ();
                 }
@@ -80,7 +85,7 @@ namespace SdnListMonitor.Core.Service.Data
                     // the same properties as the one in the old data set (checking if it has not been modified).
                     // Deeper comparison details depend on the separate equality comparer.
                     if (!m_entryEqualityComparer.Equals (oldDataSetCurrent, newDataSetCurrent))
-                        entriesModified++;
+                        entriesModified.AddLast (newDataSetCurrent);
 
                     // Move both enumerators because the entry was neither added nor removed:
                     oldDataSetNext = oldDataSetEnumerator.MoveNext ();
@@ -88,12 +93,12 @@ namespace SdnListMonitor.Core.Service.Data
                 }
                 else
                 {
-                    // if the entry in the old data set has a greater UID than the one in the new data set,
-                    // this means that new entries were added in the beginning or the middle of the new set. For example:
+                    // If the entry in the old data set has a greater UID than the one in the new data set,
+                    // new entries were added in the beginning or the middle of the new set. For example:
                     // old data set: 1 3
                     // new data set: 1 2 3
                     // 3 (old data set) is greater than 2 (new data set), thus 2 is a new entry
-                    entriesAdded++;
+                    entriesAdded.AddLast (newDataSetCurrent);
                     // Only move the enumerator of the new data set to catch up with the old data set:
                     newDataSetNext = newDataSetEnumerator.MoveNext ();
                 }
@@ -104,25 +109,45 @@ namespace SdnListMonitor.Core.Service.Data
             // new data set: 1 2 3 4
 
             // If the old data set enumerator has not reached the end, add one item (the current one) as removed.
-            // Move old data set enumerator to the end and count the remaining entries.
+            // Move old data set enumerator to the end and add the remaining entries as removed.
             if (oldDataSetNext)
-                entriesRemoved += GetRemainingItemsCount (oldDataSetEnumerator) + 1;
+            {
+                entriesRemoved.AddLast (oldDataSetEnumerator.Current);
+                AddEntriesFromEnumerator (entriesRemoved, oldDataSetEnumerator);
+            }
 
             // If the new data set enumerator has not reached the end, add one item (the current one) as added.
-            // Move new data set enumerator to the end and count the remaining entries.
+            // Move new data set enumerator to the end and add the remaining entries as newly added.
             if (newDataSetNext)
-                entriesAdded += GetRemainingItemsCount (newDataSetEnumerator) + 1;
+            {
+                entriesAdded.AddLast (newDataSetEnumerator.Current);
+                AddEntriesFromEnumerator (entriesAdded, newDataSetEnumerator);
+            }
 
-            return Task.FromResult (new SdnDataChangesCheckResult (entriesAdded, entriesRemoved, entriesModified));
+            return Task.FromResult<ISdnDataChangesCheckResult> (new SdnDataSymmetryCheckerResult (entriesAdded, entriesRemoved, entriesModified));
         }
 
-        private int GetRemainingItemsCount (IEnumerator<ISdnEntry> entriesEnumerator)
+        private void AddEntriesFromEnumerator (LinkedList<ISdnEntry> entries, IEnumerator<ISdnEntry> entriesEnumerator)
         {
-            int remainingEntriesCount = 0;
             while (entriesEnumerator.MoveNext ())
-                remainingEntriesCount++;
+                entries.AddLast (entriesEnumerator.Current);
+        }
 
-            return remainingEntriesCount;
+        private class SdnDataSymmetryCheckerResult : SdnDataChangesCheckResultBase
+        {
+            public SdnDataSymmetryCheckerResult (IReadOnlyCollection<ISdnEntry> added, 
+                IReadOnlyCollection<ISdnEntry> removed, IReadOnlyCollection<ISdnEntry> modified)
+            {
+                EntriesAdded = added;
+                EntriesRemoved = removed;
+                EntriesModified = modified;
+            }
+
+            public override IReadOnlyCollection<ISdnEntry> EntriesAdded { get; }
+
+            public override IReadOnlyCollection<ISdnEntry> EntriesRemoved { get; }
+
+            public override IReadOnlyCollection<ISdnEntry> EntriesModified { get; }
         }
     }
 }

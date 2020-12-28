@@ -17,6 +17,6 @@ namespace SdnListMonitor.Core.Abstractions.Service.Data
         /// </summary>
         /// <param name="cancellationToken">The cancellation token to cancel operation.</param>
         /// <returns>An <see cref="IAsyncEnumerable{ISdnEntry}"/> that contains all the entries.</returns>
-        Task<ISdnDataSet> GetSdnDataAsync (CancellationToken cancellationToken = default);
+        Task<ISdnDataSet> FetchSdnDataAsync (CancellationToken cancellationToken = default);
     }
 }
