@@ -21,11 +21,11 @@ namespace SdnListMonitor.Core.Data
         /// </returns>
         public int Compare (ISdnEntry first, ISdnEntry second)
         {
-            if (first == null && second == null)
+            if (first is null && second is null)
                 return 0;
-            else if (first != null && second == null)
+            else if (!(first is null) && second is null)
                 return 1;
-            else if (first == null && second != null)
+            else if (first is null && !(second is null))
                 return -1;
             else
                 return first.Uid.CompareTo (second.Uid);

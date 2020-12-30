@@ -56,6 +56,7 @@ namespace SdnListMonitor.Core.Xml.Service.Data
         /// <returns>An <see cref="IAsyncEnumerable{ISdnEntry}"/> that contains all the entries.</returns>
         public async Task<ISdnDataSet> FetchSdnDataAsync (CancellationToken cancellationToken = default)
         {
+            // Creating a sorted set as a precaution, in case SDN.XML is not properly sorted.
             var snapshot = await SortedSdnDataSet.CreateAsync (GetSdnEntriesAsync (cancellationToken), m_entriesComparer);
             return snapshot;
         }

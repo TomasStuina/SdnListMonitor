@@ -17,34 +17,45 @@ namespace SdnListMonitor.Core.Service.Data
         /// <returns></returns>
         public bool Equals (ISdnEntry first, ISdnEntry second)
         {
-            if (first == null && second == null)
+            if (first is null && second is null)
                 return true;
 
-            if (first == null || second == null)
+            if (first is null || second is null)
                 return false;
 
-            if (!AreBothEntriesHaveEqualSingleLevelProperties (first, second))
+            if (!HaveEqualSingleLevelProperties (first, second))
                 return false;
 
             return true;
         }
 
-        public int GetHashCode (ISdnEntry entry) => entry?.Uid ?? 0;
+        public int GetHashCode (ISdnEntry entry)
+        {
+            if (entry is null)
+                return 0;
 
-        private bool AreBothEntriesHaveEqualSingleLevelProperties (ISdnEntry first, ISdnEntry second)
+            return entry.Uid;
+        }
+
+        private bool HaveEqualSingleLevelProperties (ISdnEntry first, ISdnEntry second)
         {
             if (first.Uid != second.Uid)
                 return false;
 
-            if (!string.Equals (first.FirstName, second.FirstName, StringComparison.InvariantCulture) 
-                || !string.Equals (first.LastName, second.LastName, StringComparison.InvariantCulture))
+            if (!HaveSameCredentials (first, second))
                 return false;
 
-            if (!string.Equals (first.Title, second.Title, StringComparison.InvariantCulture) 
-                || !string.Equals (first.Remarks, second.Remarks, StringComparison.InvariantCulture))
+            if (!string.Equals (first.Remarks, second.Remarks, StringComparison.InvariantCulture))
                 return false;
 
             return string.Equals (first.SdnType, second.SdnType, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private bool HaveSameCredentials (ISdnEntry first, ISdnEntry second)
+        {
+            return string.Equals (first.FirstName, second.FirstName, StringComparison.InvariantCulture)
+                && string.Equals (first.LastName, second.LastName, StringComparison.InvariantCulture)
+                    && string.Equals (first.Title, second.Title, StringComparison.InvariantCulture);
         }
     }
 }
