@@ -16,10 +16,10 @@ namespace SdnListMonitor.Core.Tests.Extensions
             var firstEntry = Mock.Of<ISdnEntry> ();
             var secondEntry = Mock.Of<ISdnEntry> ();
             var entriesAdded = new List<ISdnEntry> { firstEntry, secondEntry };
-            var changesCheckResult = Mock.Of<ISdnDataChangesCheckResult> (self =>
+            var changesCheckResult = Mock.Of<ISdnDataChangesCheckResult<ISdnEntry>> (self =>
                 self.EntriesAdded == entriesAdded.AsReadOnly ());
 
-            var persistence = new Mock<ISdnDataPersistence> ();
+            var persistence = new Mock<ISdnDataPersistence<ISdnEntry>> ();
 
             // Act
             persistence.Object.ApplyChanges (changesCheckResult);
@@ -36,10 +36,10 @@ namespace SdnListMonitor.Core.Tests.Extensions
             var firstEntry = Mock.Of<ISdnEntry> ();
             var secondEntry = Mock.Of<ISdnEntry> ();
             var entriesRemoved = new List<ISdnEntry> { firstEntry, secondEntry };
-            var changesCheckResult = Mock.Of<ISdnDataChangesCheckResult> (self =>
+            var changesCheckResult = Mock.Of<ISdnDataChangesCheckResult<ISdnEntry>> (self =>
                 self.EntriesRemoved == entriesRemoved.AsReadOnly ());
 
-            var persistence = new Mock<ISdnDataPersistence> ();
+            var persistence = new Mock<ISdnDataPersistence<ISdnEntry>> ();
 
             // Act
             persistence.Object.ApplyChanges (changesCheckResult);
@@ -56,10 +56,10 @@ namespace SdnListMonitor.Core.Tests.Extensions
             var firstEntry = Mock.Of<ISdnEntry> ();
             var secondEntry = Mock.Of<ISdnEntry> ();
             var entriesModified = new List<ISdnEntry> { firstEntry, secondEntry };
-            var changesCheckResult = Mock.Of<ISdnDataChangesCheckResult> (self =>
+            var changesCheckResult = Mock.Of<ISdnDataChangesCheckResult<ISdnEntry>> (self =>
                 self.EntriesModified == entriesModified.AsReadOnly ());
 
-            var persistence = new Mock<ISdnDataPersistence> ();
+            var persistence = new Mock<ISdnDataPersistence<ISdnEntry>> ();
 
             // Act
             persistence.Object.ApplyChanges (changesCheckResult);

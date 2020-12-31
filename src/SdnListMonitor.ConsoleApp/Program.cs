@@ -1,14 +1,12 @@
 ﻿using Microsoft.Extensions.Options;
 using SdnListMonitor.Core.Abstractions.Configuration;
-using SdnListMonitor.Core.Abstractions.Data.Model;
-using SdnListMonitor.Core.Abstractions.Service.Data;
 using SdnListMonitor.Core.Data;
 using SdnListMonitor.Core.Service.Data;
 using SdnListMonitor.Core.Service.Monitoring;
 using SdnListMonitor.Core.Xml.Configuration;
+using SdnListMonitor.Core.Xml.Data.Model;
 using SdnListMonitor.Core.Xml.Service.Data;
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -22,23 +20,24 @@ namespace SdnListMonitor.ConsoleApp
             var token = source.Token;
 
             // Initialize comparers for the whole SDN List and individual entries:
-            IComparer<ISdnEntry> dataSetEntryComparer = new AscendingByUidComparer ();
-            IEqualityComparer<ISdnEntry> entryEqualityComparer = new SdnEntryEqualityComparer ();
+            var setEntryComparer = new SdnEntryAscendingByUidComparer ();
+            var entryEqualityComparer = new SdnXmlEntryEqualityComparer ();
 
             // Initialize a checker that is going to be used for comparing the stored SDN List with the fetched one:
-            ISdnDataChangesChecker dataChangesChecker = new SdnDataSymmetryChecker (dataSetEntryComparer, entryEqualityComparer);
+            var dataChangesChecker = new SdnDataSymmetryChecker<SdnXmlEntry> (setEntryComparer, entryEqualityComparer);
 
             // Initialize a retriever for retrieving SDN List from a local/remote location:
             var sdnXmlDataRetrieverOptions = new SdnXmlDataRetrieverOptions { XmlFilePath = @"{insert XML path here}" };
-            ISdnDataRetriever dataRetriever = new SdnXmlDataRetriever (new XmlReaderFactory (), dataSetEntryComparer, Options.Create (sdnXmlDataRetrieverOptions));
+            var dataRetriever = new SdnXmlDataRetriever (new XmlReaderFactory (), setEntryComparer, Options.Create (sdnXmlDataRetrieverOptions));
 
             // Prefetch the SDN List and store it in memory:
             var preloadedSdnData = await dataRetriever.FetchSdnDataAsync (token).ConfigureAwait (false);
-            ISdnDataPersistence dataPersistence = new InMemorySdnDataPersistence (preloadedSdnData);
+            var dataPersistence = new InMemorySdnDataPersistence<SdnXmlEntry> (preloadedSdnData);
 
-            var monitoringOptions = new SdnMonitorOptions () { MonitoringInterval = TimeSpan.FromSeconds (10) };
+            var monitoringOptions = new SdnMonitorOptions () { MonitoringInterval = TimeSpan.FromMinutes (5) };
             // Initialize a changes monitor that will be running in the background and register a callback to be executed when there are new changes:
-            using var monitor = new SdnChangesMonitorService (dataChangesChecker, dataRetriever, dataPersistence, Options.Create (monitoringOptions));
+
+            using var monitor = new SdnChangesMonitorService<SdnXmlEntry> (dataChangesChecker, dataRetriever, dataPersistence, Options.Create (monitoringOptions));
             monitor.OnSdnDataChanged (OnSdnDataChanged);
 
             Console.WriteLine ($"MONITORING START - US - OFAC Specially Designated Nationals (SDN) List {DateTimeOffset.Now}.");

@@ -6,8 +6,8 @@ namespace SdnListMonitor.Core.Abstractions.Data
     /// <summary>
     /// Provides an interface to access Specially Designated Nationals List.
     /// </summary>
-    public interface ISdnDataSet
+    public interface ISdnDataSet<TEntry> where TEntry : class, ISdnEntry
     {
-        IEnumerable<ISdnEntry> Entries { get; }
+        IEnumerable<TEntry> Entries { get; }
     }
 }

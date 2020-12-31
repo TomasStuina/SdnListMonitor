@@ -4,9 +4,9 @@ using System.Collections.Generic;
 namespace SdnListMonitor.Core.Abstractions.Service.Data
 {
     /// <summary>
-    /// Represents a comparison result in <see cref="ISdnDataChangesChecker"/> implementations.
+    /// Represents a comparison result in <see cref="ISdnDataChangesChecker{TEntry}"/> implementations.
     /// </summary>
-    public interface ISdnDataChangesCheckResult
+    public interface ISdnDataChangesCheckResult<TEntry> where TEntry : class, ISdnEntry
     {
         /// <summary>
         /// Indicates if the data has changed.
@@ -16,16 +16,16 @@ namespace SdnListMonitor.Core.Abstractions.Service.Data
         /// <summary>
         /// Entries added.
         /// </summary>
-        public IReadOnlyCollection<ISdnEntry> EntriesAdded { get; }
+        public IReadOnlyCollection<TEntry> EntriesAdded { get; }
 
         /// <summary>
         /// Entries removed.
         /// </summary>
-        public IReadOnlyCollection<ISdnEntry> EntriesRemoved { get; }
+        public IReadOnlyCollection<TEntry> EntriesRemoved { get; }
 
         /// <summary>
         /// Entries modified.
         /// </summary>
-        public IReadOnlyCollection<ISdnEntry> EntriesModified { get; }
+        public IReadOnlyCollection<TEntry> EntriesModified { get; }
     }
 }

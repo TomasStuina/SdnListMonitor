@@ -4,9 +4,10 @@ using System.Collections.Generic;
 namespace SdnListMonitor.Core.Abstractions.Service.Data
 {
     /// <summary>
-    /// A base class for implementing <see cref="ISdnDataChangesCheckResult"/>.
+    /// A base class for implementing <see cref="ISdnDataChangesCheckResult{TEntry}"/>.
     /// </summary>
-    public abstract class SdnDataChangesCheckResultBase : ISdnDataChangesCheckResult
+    public abstract class SdnDataChangesCheckResultBase<TEntry> : ISdnDataChangesCheckResult<TEntry>
+         where TEntry : class, ISdnEntry
     {
         /// <summary>
         /// Indicates if the data has changed.
@@ -17,10 +18,10 @@ namespace SdnListMonitor.Core.Abstractions.Service.Data
         /// </returns>
         public bool DataChanged => EntriesAdded.Count > 0 || EntriesRemoved.Count > 0 || EntriesModified.Count > 0;
 
-        public abstract IReadOnlyCollection<ISdnEntry> EntriesAdded { get; }
+        public abstract IReadOnlyCollection<TEntry> EntriesAdded { get; }
 
-        public abstract IReadOnlyCollection<ISdnEntry> EntriesRemoved { get; }
+        public abstract IReadOnlyCollection<TEntry> EntriesRemoved { get; }
 
-        public abstract IReadOnlyCollection<ISdnEntry> EntriesModified { get; }
+        public abstract IReadOnlyCollection<TEntry> EntriesModified { get; }
     }
 }

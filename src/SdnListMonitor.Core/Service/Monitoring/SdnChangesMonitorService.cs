@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Options;
 using SdnListMonitor.Core.Abstractions.Configuration;
+using SdnListMonitor.Core.Abstractions.Data.Model;
 using SdnListMonitor.Core.Abstractions.Extensions;
 using SdnListMonitor.Core.Abstractions.Service.Data;
 using SdnListMonitor.Core.Abstractions.Service.Monitoring;
@@ -14,14 +15,14 @@ namespace SdnListMonitor.Core.Service.Monitoring
     /// Provides Specially Designated Nationals List changes monitoring.
     /// Tracks added, removed, and modified changes.
     /// </summary>
-    public class SdnChangesMonitorService : SdnMonitorServiceBase
+    public class SdnChangesMonitorService<TEntry> : SdnMonitorServiceBase where TEntry : class, ISdnEntry
     {
-        private readonly ISdnDataChangesChecker m_dataChangesChecker;
-        private readonly ISdnDataRetriever m_dataRetriever;
-        private readonly ISdnDataPersistence m_dataPersistence;
+        private readonly ISdnDataChangesChecker<TEntry> m_dataChangesChecker;
+        private readonly ISdnDataRetriever<TEntry> m_dataRetriever;
+        private readonly ISdnDataPersistence<TEntry> m_dataPersistence;
         private Action<object, SdnDataChangedEventArgs> m_onSdnDataChangedDelegate;
 
-        public SdnChangesMonitorService (ISdnDataChangesChecker dataChangesChecker, ISdnDataRetriever dataRetriever, ISdnDataPersistence dataPersistence,
+        public SdnChangesMonitorService (ISdnDataChangesChecker<TEntry> dataChangesChecker, ISdnDataRetriever<TEntry> dataRetriever, ISdnDataPersistence<TEntry> dataPersistence,
             IOptions<SdnMonitorOptions> options) : base (options)
         {
             m_dataChangesChecker = dataChangesChecker.ThrowIfNull (nameof (dataChangesChecker));
@@ -50,7 +51,7 @@ namespace SdnListMonitor.Core.Service.Monitoring
             RaiseDataChangedEvent (result);
         }
 
-        private void RaiseDataChangedEvent (ISdnDataChangesCheckResult changesCheckresult)
+        private void RaiseDataChangedEvent (ISdnDataChangesCheckResult<TEntry> changesCheckresult)
         {
             m_onSdnDataChangedDelegate?.Invoke (this, new SdnDataChangedEventArgs
             {

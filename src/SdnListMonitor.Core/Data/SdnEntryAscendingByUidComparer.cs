@@ -7,7 +7,7 @@ namespace SdnListMonitor.Core.Data
     /// Compares two <see cref="ISdnEntry"/> instances by their UID's
     /// in ascending order.
     /// </summary>
-    public class AscendingByUidComparer : IComparer<ISdnEntry>
+    public class SdnEntryAscendingByUidComparer : IComparer<ISdnEntry>
     {
         /// <summary>
         /// Compares two <see cref="ISdnEntry"/> instances by their UIDs.
