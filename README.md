@@ -17,6 +17,7 @@ SDN List Monitor is structured as follows:
 - Asynchronous deserialization for `SdnXmlEntry` in `SdnXmlDataRetriever`.
 - Support for `Microsoft.Extensions.Logging.ILogger` and proper logging.
 - Proper `CancellationToken` handling.
+- Support for storing entries in an external persistence storage for the next monitoring check. 
 - Extended `SdnXmlEntry` equality comparison to support additional properties: `programList`, `idList`, `akaList`, `addressList`, `nationalityList`, `citizenshipList`, `dateOfBirthList`, `placeOfBirthList`, `vesselInfo`.
 - Support for the compressed SDN data (SDN.zip) retrieval in order to reduce network data usage.
 - Support for the advanced sanctions data model (sdn_advanced.xml) developed by the UN 1267/1988 Security Council Committee.
