@@ -22,6 +22,14 @@ namespace SdnListMonitor.Core.Service.Monitoring
         private readonly ISdnDataPersistence<TEntry> m_dataPersistence;
         private Action<object, SdnDataChangedEventArgs> m_onSdnDataChangedDelegate;
 
+        /// <summary>
+        /// Instantiates <see cref="SdnChangesMonitorService{TEntry}"/>.
+        /// </summary>
+        /// <param name="dataChangesChecker"><see cref="ISdnDataChangesChecker{TEntry}"/> to compare stored and fetched data.</param>
+        /// <param name="dataRetriever"><see cref="ISdnDataRetriever{TEntry}"/> to use in fetching SDN entries.</param>
+        /// <param name="dataPersistence"><see cref="ISdnDataPersistence{TEntry}"/> to store entries for the next check.</param>
+        /// <param name="options">Options to configure this monitor.</param>
+
         public SdnChangesMonitorService (ISdnDataChangesChecker<TEntry> dataChangesChecker, ISdnDataRetriever<TEntry> dataRetriever, ISdnDataPersistence<TEntry> dataPersistence,
             IOptions<SdnMonitorOptions> options) : base (options)
         {

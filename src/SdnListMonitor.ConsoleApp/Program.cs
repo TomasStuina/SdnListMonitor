@@ -43,7 +43,7 @@ namespace SdnListMonitor.ConsoleApp
             Console.WriteLine ($"MONITORING START - US - OFAC Specially Designated Nationals (SDN) List {DateTimeOffset.Now}.");
             await monitor.StartAsync (token);
 
-            // Pressing a key will stop previously started monitor (Dispose method will be called):
+            // Pressing a key will stop previously started monitor (Dispose method will be called, which will internally invoke StopAsync):
             Console.ReadKey ();
         }
 
