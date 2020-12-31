@@ -6,28 +6,28 @@ using System.Threading.Tasks;
 namespace SdnListMonitor.Core.Xml.Data
 {
     /// <summary>
-    /// Represents a sorted <see cref="ISdnEntry"/> implementation.
+    /// Represents a sorted <see cref="ISdnDataSet{TEntry}"/> implementation.
     /// </summary>
-    internal class SortedSdnDataSet : ISdnDataSet
+    internal class SortedSdnDataSet<TEntry> : ISdnDataSet<TEntry> where TEntry : class, ISdnEntry
     {
-        private readonly SortedSet<ISdnEntry> m_sdnEntries;
+        private readonly SortedSet<TEntry> m_sdnEntries;
 
-        private SortedSdnDataSet (IComparer<ISdnEntry> comparer)
+        private SortedSdnDataSet (IComparer<TEntry> comparer)
         {
-            m_sdnEntries = new SortedSet<ISdnEntry> (comparer);
+            m_sdnEntries = new SortedSet<TEntry> (comparer);
         }
 
-        public IEnumerable<ISdnEntry> Entries => m_sdnEntries;
+        public IEnumerable<TEntry> Entries => m_sdnEntries;
 
-        public static async Task<SortedSdnDataSet> CreateAsync (IAsyncEnumerable<ISdnEntry> entries, IComparer<ISdnEntry> comparer)
+        public static async Task<SortedSdnDataSet<TEntry>> CreateAsync (IAsyncEnumerable<TEntry> entries, IComparer<TEntry> comparer)
         {
-            var sdnDataSet = new SortedSdnDataSet (comparer);
+            var sdnDataSet = new SortedSdnDataSet<TEntry> (comparer);
             await foreach (var entry in entries)
                 sdnDataSet.AddEntry (entry);
 
             return sdnDataSet;
         }
 
-        private void AddEntry (ISdnEntry sdnEntry) => m_sdnEntries.Add (sdnEntry);
+        private void AddEntry (TEntry sdnEntry) => m_sdnEntries.Add (sdnEntry);
     }
 }

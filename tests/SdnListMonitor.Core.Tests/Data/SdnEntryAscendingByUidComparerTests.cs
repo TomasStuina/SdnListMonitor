@@ -6,13 +6,13 @@ using Xunit;
 
 namespace SdnListMonitor.Core.Tests.Data
 {
-    public class AscendingByUidComparerTests
+    public class SdnEntryAscendingByUidComparerTests
     {
-        private readonly AscendingByUidComparer m_ascendingByUidComparer;
+        private readonly SdnEntryAscendingByUidComparer m_ascendingByUidComparer;
 
-        public AscendingByUidComparerTests ()
+        public SdnEntryAscendingByUidComparerTests ()
         {
-            m_ascendingByUidComparer = new AscendingByUidComparer ();
+            m_ascendingByUidComparer = new SdnEntryAscendingByUidComparer ();
         }
 
         [Fact]

@@ -21,7 +21,7 @@ namespace SdnListMonitor.Core.Xml.Service.Data
     /// from SDN.xml file that corresponds to the format defined in SDN.xsd schema file
     /// (https://home.treasury.gov/system/files/126/sdn.xsd).
     /// </summary>
-    public class SdnXmlDataRetriever : ISdnDataRetriever
+    public class SdnXmlDataRetriever : ISdnDataRetriever<SdnXmlEntry>
     {
         private readonly IXmlReaderFactory m_xmlReaderFactory;
         private readonly IComparer<ISdnEntry> m_entriesComparer;
@@ -53,15 +53,15 @@ namespace SdnListMonitor.Core.Xml.Service.Data
         /// Though, this also depends how much of the data is being buffered by the underlying stream in XML reader.
         /// </remarks>
         /// <param name="cancellationToken">The cancellation token to cancel operation.</param>
-        /// <returns>An <see cref="IAsyncEnumerable{ISdnEntry}"/> that contains all the entries.</returns>
-        public async Task<ISdnDataSet> FetchSdnDataAsync (CancellationToken cancellationToken = default)
+        /// <returns>An <see cref="Task{ISdnDataSet{SdnXmlEntry}}"/> indicating the completion and a result.</returns>
+        public async Task<ISdnDataSet<SdnXmlEntry>> FetchSdnDataAsync (CancellationToken cancellationToken = default)
         {
             // Creating a sorted set as a precaution, in case SDN.XML is not properly sorted.
-            var snapshot = await SortedSdnDataSet.CreateAsync (GetSdnEntriesAsync (cancellationToken), m_entriesComparer);
+            var snapshot = await SortedSdnDataSet<SdnXmlEntry>.CreateAsync (GetSdnEntriesAsync (), m_entriesComparer);
             return snapshot;
         }
 
-        private async IAsyncEnumerable<ISdnEntry> GetSdnEntriesAsync (CancellationToken cancellationToken = default)
+        private async IAsyncEnumerable<SdnXmlEntry> GetSdnEntriesAsync ()
         {
             using XmlReader xmlReader = m_xmlReaderFactory.Create (m_options.XmlFilePath, m_xmlReaderSettings);
 
@@ -87,7 +87,7 @@ namespace SdnListMonitor.Core.Xml.Service.Data
             }
         }
 
-        private async IAsyncEnumerable<ISdnEntry> ReadSdnEntriesAsync (XmlReader xmlReader)
+        private async IAsyncEnumerable<SdnXmlEntry> ReadSdnEntriesAsync (XmlReader xmlReader)
         {
             while (!xmlReader.EOF)
             {
@@ -102,7 +102,7 @@ namespace SdnListMonitor.Core.Xml.Service.Data
                 if (!m_xmlSerializer.CanDeserialize (xmlReader))
                     throw new InvalidOperationException (Res.ErrorWhileRetrievingSdnList);
 
-                yield return m_xmlSerializer.Deserialize (xmlReader) as ISdnEntry;
+                yield return m_xmlSerializer.Deserialize (xmlReader) as SdnXmlEntry;
             }
         }
     }

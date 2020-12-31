@@ -15,7 +15,7 @@ namespace SdnListMonitor.Core.Xml.Tests.Data
         public async Task CreateAsync_WhenEmptyAsyncEnumerablePassed_ShouldReturnSdnDataWithoutEntries ()
         {
             // Act
-            var sdnDataSet = await SortedSdnDataSet.CreateAsync (AsyncEnumerable.Empty<ISdnEntry> (), Mock.Of <IComparer<ISdnEntry>> ());
+            var sdnDataSet = await SortedSdnDataSet<ISdnEntry>.CreateAsync (AsyncEnumerable.Empty<ISdnEntry> (), Mock.Of <IComparer<ISdnEntry>> ());
 
             // Assert
             sdnDataSet.Entries.ShouldBeEmpty ();
@@ -37,7 +37,7 @@ namespace SdnListMonitor.Core.Xml.Tests.Data
                     .Returns<ISdnEntry, ISdnEntry> ((x, y) => x.Uid.CompareTo (y.Uid));
 
             // Act
-            var sdnDataSet = await SortedSdnDataSet.CreateAsync (CreateSdnEntriesAsyncEnumerable (entries), comparer.Object);
+            var sdnDataSet = await SortedSdnDataSet<ISdnEntry>.CreateAsync (CreateSdnEntriesAsyncEnumerable (entries), comparer.Object);
 
             // Assert
             var sortedEntries = sdnDataSet.Entries.ToArray ();
@@ -63,7 +63,7 @@ namespace SdnListMonitor.Core.Xml.Tests.Data
                     .Returns<ISdnEntry, ISdnEntry> ((x, y) => y.Uid.CompareTo (x.Uid));
 
             // Act
-            var sdnDataSet = await SortedSdnDataSet.CreateAsync (CreateSdnEntriesAsyncEnumerable (entries), comparer.Object);
+            var sdnDataSet = await SortedSdnDataSet<ISdnEntry>.CreateAsync (CreateSdnEntriesAsyncEnumerable (entries), comparer.Object);
 
             // Assert
             var sortedEntries = sdnDataSet.Entries.ToArray ();

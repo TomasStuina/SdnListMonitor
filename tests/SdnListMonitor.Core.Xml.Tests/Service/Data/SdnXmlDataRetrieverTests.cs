@@ -25,7 +25,7 @@ namespace SdnListMonitor.Core.Xml.Tests.Service.Data
 
         public SdnXmlDataRetrieverTests ()
         {
-            m_entriesComparer = new AscendingByUidComparer ();
+            m_entriesComparer = new SdnEntryAscendingByUidComparer ();
             m_options = Options.Create (new SdnXmlDataRetrieverOptions ());
         }
 

@@ -1,21 +1,21 @@
-﻿using SdnListMonitor.Core.Abstractions.Data.Model;
+﻿using SdnListMonitor.Core.Xml.Data.Model;
 using System;
 using System.Collections.Generic;
 
-namespace SdnListMonitor.Core.Service.Data
+namespace SdnListMonitor.Core.Xml.Service.Data
 {
     /// <summary>
-    /// Provides an equality comparison of two <see cref="ISdnEntry"/> instances.
+    /// Provides an equality comparison of two <see cref="SdnXmlEntry"/> instances.
     /// </summary>
-    public class SdnEntryEqualityComparer : IEqualityComparer<ISdnEntry>
+    public class SdnXmlEntryEqualityComparer : IEqualityComparer<SdnXmlEntry>
     {
         /// <summary>
-        /// Compares the equality of two <see cref="ISdnEntry"/> instances by their properties.
+        /// Compares the equality of two <see cref="SdnXmlEntry"/> instances by their properties.
         /// </summary>
         /// <param name="first">The first instance to compare against the <paramref name="second"/>.</param>
         /// <param name="second">The second instance to compare against the <paramref name="first"/>.</param>
         /// <returns></returns>
-        public bool Equals (ISdnEntry first, ISdnEntry second)
+        public bool Equals (SdnXmlEntry first, SdnXmlEntry second)
         {
             if (first is null && second is null)
                 return true;
@@ -29,7 +29,7 @@ namespace SdnListMonitor.Core.Service.Data
             return true;
         }
 
-        public int GetHashCode (ISdnEntry entry)
+        public int GetHashCode (SdnXmlEntry entry)
         {
             if (entry is null)
                 return 0;
@@ -37,7 +37,7 @@ namespace SdnListMonitor.Core.Service.Data
             return entry.Uid;
         }
 
-        private bool HaveEqualSingleLevelProperties (ISdnEntry first, ISdnEntry second)
+        private bool HaveEqualSingleLevelProperties (SdnXmlEntry first, SdnXmlEntry second)
         {
             if (first.Uid != second.Uid)
                 return false;
@@ -51,7 +51,7 @@ namespace SdnListMonitor.Core.Service.Data
             return string.Equals (first.SdnType, second.SdnType, StringComparison.OrdinalIgnoreCase);
         }
 
-        private bool HaveSameCredentials (ISdnEntry first, ISdnEntry second)
+        private bool HaveSameCredentials (SdnXmlEntry first, SdnXmlEntry second)
         {
             return string.Equals (first.FirstName, second.FirstName, StringComparison.InvariantCulture)
                 && string.Equals (first.LastName, second.LastName, StringComparison.InvariantCulture)

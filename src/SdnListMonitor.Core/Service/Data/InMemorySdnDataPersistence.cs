@@ -7,18 +7,18 @@ using System.Collections.Generic;
 namespace SdnListMonitor.Core.Service.Data
 {
     /// <summary>
-    /// Provides in memory storage for <see cref="ISdnEntry"/> instances.
+    /// Provides in memory storage for <see cref="ISdnEntry"/> derivative instances.
     /// </summary>
-    public class InMemorySdnDataPersistence : ISdnDataPersistence
+    public class InMemorySdnDataPersistence<TEntry> : ISdnDataPersistence<TEntry> where TEntry : class, ISdnEntry
     {
-        private readonly SortedDictionary<int, ISdnEntry> m_storedEntries;
+        private readonly SortedDictionary<int, TEntry> m_storedEntries;
 
         /// <summary>
-        /// Instantiates <see cref="InMemorySdnDataPersistence"/> with
-        /// entries from the provided <see cref="ISdnDataSet"/> instance.
+        /// Instantiates <see cref="InMemorySdnDataPersistence{TEntry}"/> with
+        /// entries from the provided <see cref="ISdnDataSet{TEntry}"/> instance.
         /// </summary>
         /// <param name="sdnDataSet"><see cref="ISdnDataSet"/> instance to add entries from.</param>
-        public InMemorySdnDataPersistence (ISdnDataSet sdnDataSet) : this ()
+        public InMemorySdnDataPersistence (ISdnDataSet<TEntry> sdnDataSet) : this ()
         {
             sdnDataSet.ThrowIfNull (nameof (sdnDataSet));
             PopulateWithEntriesFrom (sdnDataSet);
@@ -26,46 +26,46 @@ namespace SdnListMonitor.Core.Service.Data
 
         public InMemorySdnDataPersistence ()
         {
-            m_storedEntries = new SortedDictionary<int, ISdnEntry> ();
+            m_storedEntries = new SortedDictionary<int, TEntry> ();
         }
 
         /// <summary>
-        /// Returns stored <see cref="ISdnEntry"/> instances.
+        /// Returns stored <see cref="TEntry"/> instances.
         /// </summary>
-        public IEnumerable<ISdnEntry> Entries => m_storedEntries.Values;
+        public IEnumerable<TEntry> Entries => m_storedEntries.Values;
 
         /// <summary>
-        /// Adds <see cref="ISdnEntry"/> instance if does not exist.
+        /// Adds <see cref="TEntry"/> instance if does not exist.
         /// </summary>
         /// <param name="entry">Entry to add.</param>
-        public void Add (ISdnEntry entry)
+        public void Add (TEntry entry)
         {
             entry.ThrowIfNull (nameof (entry));
             m_storedEntries.TryAdd (entry.Uid, entry);
         }
 
         /// <summary>
-        /// Removes <see cref="ISdnEntry"/> instance if it exists.
+        /// Removes <see cref="TEntry"/> instance if it exists.
         /// </summary>
         /// <param name="entry">Entry to remove.</param>
-        public void Remove (ISdnEntry entry)
+        public void Remove (TEntry entry)
         {
             entry.ThrowIfNull (nameof (entry));
             m_storedEntries.Remove (entry.Uid);
         }
 
         /// <summary>
-        /// Updates <see cref="ISdnEntry"/> instance if it exist.
+        /// Updates <see cref="TEntry"/> instance if it exist.
         /// </summary>
         /// <param name="entry">Entry to update.</param>
-        public void Update (ISdnEntry entry)
+        public void Update (TEntry entry)
         {
             entry.ThrowIfNull (nameof (entry));
             if (m_storedEntries.ContainsKey (entry.Uid))
                 m_storedEntries[entry.Uid] = entry;
         }
 
-        private void PopulateWithEntriesFrom (ISdnDataSet sdnDataSet)
+        private void PopulateWithEntriesFrom (ISdnDataSet<TEntry> sdnDataSet)
         {
             foreach (var sdnEntry in sdnDataSet.Entries)
                 m_storedEntries[sdnEntry.Uid] = sdnEntry;

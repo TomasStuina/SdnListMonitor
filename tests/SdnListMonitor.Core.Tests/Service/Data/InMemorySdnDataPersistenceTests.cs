@@ -15,7 +15,7 @@ namespace SdnListMonitor.Core.Tests.Service.Data
         public void Ctor_WhenSdnDataSetNull_ShouldThrowArgumentNullException ()
         {
             // Act & Assert
-            Should.Throw<ArgumentNullException> (() => new InMemorySdnDataPersistence (null))
+            Should.Throw<ArgumentNullException> (() => new InMemorySdnDataPersistence<ISdnEntry> (null))
                   .ParamName
                   .ShouldBe ("sdnDataSet");
         }
@@ -24,10 +24,10 @@ namespace SdnListMonitor.Core.Tests.Service.Data
         public void Ctor_WhenEmptySdnDataSetProvided_ShouldHaveNoEntries ()
         {
             // Arrange
-            var sdnDataSet = Mock.Of<ISdnDataSet> (self => self.Entries == Enumerable.Empty<ISdnEntry> ());
+            var sdnDataSet = Mock.Of<ISdnDataSet<ISdnEntry>> (self => self.Entries == Enumerable.Empty<ISdnEntry> ());
 
             // Act & Assert
-            new InMemorySdnDataPersistence (sdnDataSet).Entries.ShouldBeEmpty ();
+            new InMemorySdnDataPersistence<ISdnEntry> (sdnDataSet).Entries.ShouldBeEmpty ();
         }
 
         [Fact]
@@ -40,10 +40,10 @@ namespace SdnListMonitor.Core.Tests.Service.Data
                 Mock.Of<ISdnEntry> (self => self.Uid == 1),
                 Mock.Of<ISdnEntry> (self => self.Uid == 2),
             };
-            var sdnDataSet = Mock.Of<ISdnDataSet> (self => self.Entries == entries);
+            var sdnDataSet = Mock.Of<ISdnDataSet<ISdnEntry>> (self => self.Entries == entries);
 
             // Act
-            var persistenceEntries = new InMemorySdnDataPersistence (sdnDataSet).Entries;
+            var persistenceEntries = new InMemorySdnDataPersistence<ISdnEntry> (sdnDataSet).Entries;
 
             // Assert
             persistenceEntries.ShouldBe (entries);
@@ -59,10 +59,10 @@ namespace SdnListMonitor.Core.Tests.Service.Data
                 Mock.Of<ISdnEntry> (self => self.Uid == 2),
                 Mock.Of<ISdnEntry> (self => self.Uid == 0),
             };
-            var sdnDataSet = Mock.Of<ISdnDataSet> (self => self.Entries == entries);
+            var sdnDataSet = Mock.Of<ISdnDataSet<ISdnEntry>> (self => self.Entries == entries);
 
             // Act
-            var persistenceEntries = new InMemorySdnDataPersistence (sdnDataSet).Entries.ToArray ();
+            var persistenceEntries = new InMemorySdnDataPersistence<ISdnEntry> (sdnDataSet).Entries.ToArray ();
 
             // Assert
             persistenceEntries.Length.ShouldBe (3);
@@ -75,14 +75,14 @@ namespace SdnListMonitor.Core.Tests.Service.Data
         public void Ctor_WhenNoSdnDataSetProvided_ShouldHaveNoEntries ()
         {
             // Act & Assert
-            new InMemorySdnDataPersistence ().Entries.ShouldBeEmpty ();
+            new InMemorySdnDataPersistence<ISdnEntry> ().Entries.ShouldBeEmpty ();
         }
 
         [Fact]
         public void Add_WhenEntryNull_ShoulThrowArgumentNullException ()
         {
             // Act & Assert
-            Should.Throw<ArgumentNullException> (() => new InMemorySdnDataPersistence ().Add (null))
+            Should.Throw<ArgumentNullException> (() => new InMemorySdnDataPersistence<ISdnEntry> ().Add (null))
                   .ParamName
                   .ShouldBe ("entry");
         }
@@ -94,8 +94,8 @@ namespace SdnListMonitor.Core.Tests.Service.Data
             var newEntry = Mock.Of<ISdnEntry> (self => self.Uid == 1);
             var currentEntry = Mock.Of<ISdnEntry> (self => self.Uid == 0);
             var currentEntries = new[] { currentEntry };
-            var sdnDataSet = Mock.Of<ISdnDataSet> (self => self.Entries == currentEntries);
-            var persistence = new InMemorySdnDataPersistence (sdnDataSet);
+            var sdnDataSet = Mock.Of<ISdnDataSet<ISdnEntry>> (self => self.Entries == currentEntries);
+            var persistence = new InMemorySdnDataPersistence<ISdnEntry> (sdnDataSet);
 
             // Act
             persistence.Add (newEntry);
@@ -112,8 +112,8 @@ namespace SdnListMonitor.Core.Tests.Service.Data
             var currentEntryFirst = Mock.Of<ISdnEntry> (self => self.Uid == 0);
             var currentEntryLast = Mock.Of<ISdnEntry> (self => self.Uid == 2);
             var currentEntries = new[] { currentEntryFirst, currentEntryLast };
-            var sdnDataSet = Mock.Of<ISdnDataSet> (self => self.Entries == currentEntries);
-            var persistence = new InMemorySdnDataPersistence (sdnDataSet);
+            var sdnDataSet = Mock.Of<ISdnDataSet<ISdnEntry>> (self => self.Entries == currentEntries);
+            var persistence = new InMemorySdnDataPersistence<ISdnEntry> (sdnDataSet);
 
             // Act
             persistence.Add (newEntry);
@@ -128,8 +128,8 @@ namespace SdnListMonitor.Core.Tests.Service.Data
             // Arrange
             var newEntry = Mock.Of<ISdnEntry> (self => self.Uid == 0);
             var currentEntries = new[] { Mock.Of<ISdnEntry> (self => self.Uid == 0) };
-            var sdnDataSet = Mock.Of<ISdnDataSet> (self => self.Entries == currentEntries);
-            var persistence = new InMemorySdnDataPersistence (sdnDataSet);
+            var sdnDataSet = Mock.Of<ISdnDataSet<ISdnEntry>> (self => self.Entries == currentEntries);
+            var persistence = new InMemorySdnDataPersistence<ISdnEntry> (sdnDataSet);
 
             // Act
             persistence.Add (newEntry);
@@ -142,7 +142,7 @@ namespace SdnListMonitor.Core.Tests.Service.Data
         public void Remove_WhenEntryNull_ShoulThrowArgumentNullException ()
         {
             // Act & Assert
-            Should.Throw<ArgumentNullException> (() => new InMemorySdnDataPersistence ().Remove (null))
+            Should.Throw<ArgumentNullException> (() => new InMemorySdnDataPersistence<ISdnEntry> ().Remove (null))
                   .ParamName
                   .ShouldBe ("entry");
         }
@@ -154,8 +154,8 @@ namespace SdnListMonitor.Core.Tests.Service.Data
             var entryToRemove = Mock.Of<ISdnEntry> (self => self.Uid == 1);
             var currentEntry = Mock.Of<ISdnEntry> (self => self.Uid == 1);
             var currentEntries = new[] { currentEntry };
-            var sdnDataSet = Mock.Of<ISdnDataSet> (self => self.Entries == currentEntries);
-            var persistence = new InMemorySdnDataPersistence (sdnDataSet);
+            var sdnDataSet = Mock.Of<ISdnDataSet<ISdnEntry>> (self => self.Entries == currentEntries);
+            var persistence = new InMemorySdnDataPersistence<ISdnEntry> (sdnDataSet);
 
             // Act
             persistence.Remove (entryToRemove);
@@ -171,8 +171,8 @@ namespace SdnListMonitor.Core.Tests.Service.Data
             var entryToRemove = Mock.Of<ISdnEntry> (self => self.Uid == 2);
             var currentEntry = Mock.Of<ISdnEntry> (self => self.Uid == 1);
             var currentEntries = new[] { currentEntry };
-            var sdnDataSet = Mock.Of<ISdnDataSet> (self => self.Entries == currentEntries);
-            var persistence = new InMemorySdnDataPersistence (sdnDataSet);
+            var sdnDataSet = Mock.Of<ISdnDataSet<ISdnEntry>> (self => self.Entries == currentEntries);
+            var persistence = new InMemorySdnDataPersistence<ISdnEntry> (sdnDataSet);
 
             // Act
             persistence.Remove (entryToRemove);
@@ -185,7 +185,7 @@ namespace SdnListMonitor.Core.Tests.Service.Data
         public void Update_WhenEntryNull_ShoulThrowArgumentNullException ()
         {
             // Act & Assert
-            Should.Throw<ArgumentNullException> (() => new InMemorySdnDataPersistence ().Update (null))
+            Should.Throw<ArgumentNullException> (() => new InMemorySdnDataPersistence<ISdnEntry> ().Update (null))
                   .ParamName
                   .ShouldBe ("entry");
         }
@@ -197,8 +197,8 @@ namespace SdnListMonitor.Core.Tests.Service.Data
             var newEntry = Mock.Of<ISdnEntry> (self => self.Uid == 1);
             var currentEntry = Mock.Of<ISdnEntry> (self => self.Uid == 1);
             var currentEntries = new[] { currentEntry };
-            var sdnDataSet = Mock.Of<ISdnDataSet> (self => self.Entries == currentEntries);
-            var persistence = new InMemorySdnDataPersistence (sdnDataSet);
+            var sdnDataSet = Mock.Of<ISdnDataSet<ISdnEntry>> (self => self.Entries == currentEntries);
+            var persistence = new InMemorySdnDataPersistence<ISdnEntry> (sdnDataSet);
 
             // Act
             persistence.Update (newEntry);
@@ -214,8 +214,8 @@ namespace SdnListMonitor.Core.Tests.Service.Data
             var newEntry = Mock.Of<ISdnEntry> (self => self.Uid == 2);
             var currentEntry = Mock.Of<ISdnEntry> (self => self.Uid == 1);
             var currentEntries = new[] { currentEntry };
-            var sdnDataSet = Mock.Of<ISdnDataSet> (self => self.Entries == currentEntries);
-            var persistence = new InMemorySdnDataPersistence (sdnDataSet);
+            var sdnDataSet = Mock.Of<ISdnDataSet<ISdnEntry>> (self => self.Entries == currentEntries);
+            var persistence = new InMemorySdnDataPersistence<ISdnEntry> (sdnDataSet);
 
             // Act
             persistence.Update (newEntry);

@@ -17,16 +17,16 @@ namespace SdnListMonitor.Core.Tests.Service.Monitoring
 {
     public class SdnChangesMonitorServiceTests
     {
-        private readonly Mock<ISdnDataChangesChecker> m_dataChangesChecker;
-        private readonly Mock<ISdnDataRetriever> m_dataRetriever;
-        private readonly Mock<ISdnDataPersistence> m_dataPersistence;
+        private readonly Mock<ISdnDataChangesChecker<ISdnEntry>> m_dataChangesChecker;
+        private readonly Mock<ISdnDataRetriever<ISdnEntry>> m_dataRetriever;
+        private readonly Mock<ISdnDataPersistence<ISdnEntry>> m_dataPersistence;
         private readonly IOptions<SdnMonitorOptions> m_options;
 
         public SdnChangesMonitorServiceTests ()
         {
-            m_dataChangesChecker = new Mock<ISdnDataChangesChecker> ();
-            m_dataRetriever = new Mock<ISdnDataRetriever> ();
-            m_dataPersistence = new Mock<ISdnDataPersistence> ();
+            m_dataChangesChecker = new Mock<ISdnDataChangesChecker<ISdnEntry>> ();
+            m_dataRetriever = new Mock<ISdnDataRetriever<ISdnEntry>> ();
+            m_dataPersistence = new Mock<ISdnDataPersistence<ISdnEntry>> ();
             m_options = Options.Create (new SdnMonitorOptions ());
         }
 
@@ -35,7 +35,7 @@ namespace SdnListMonitor.Core.Tests.Service.Monitoring
         {
             // Act & Assert
             Should.Throw<ArgumentNullException> (() =>
-                new SdnChangesMonitorService (null, m_dataRetriever.Object, m_dataPersistence.Object, m_options))
+                new SdnChangesMonitorService<ISdnEntry> (null, m_dataRetriever.Object, m_dataPersistence.Object, m_options))
                   .ParamName
                   .ShouldBe ("dataChangesChecker");
         }
@@ -45,7 +45,7 @@ namespace SdnListMonitor.Core.Tests.Service.Monitoring
         {
             // Act & Assert
             Should.Throw<ArgumentNullException> (() =>
-                new SdnChangesMonitorService (m_dataChangesChecker.Object, null, m_dataPersistence.Object, m_options))
+                new SdnChangesMonitorService<ISdnEntry> (m_dataChangesChecker.Object, null, m_dataPersistence.Object, m_options))
                   .ParamName
                   .ShouldBe ("dataRetriever");
         }
@@ -55,7 +55,7 @@ namespace SdnListMonitor.Core.Tests.Service.Monitoring
         {
             // Act & Assert
             Should.Throw<ArgumentNullException> (() =>
-                new SdnChangesMonitorService (m_dataChangesChecker.Object, m_dataRetriever.Object, null, m_options))
+                new SdnChangesMonitorService<ISdnEntry> (m_dataChangesChecker.Object, m_dataRetriever.Object, null, m_options))
                   .ParamName
                   .ShouldBe ("dataPersistence");
         }
@@ -65,7 +65,7 @@ namespace SdnListMonitor.Core.Tests.Service.Monitoring
         {
             // Act & Assert
             Should.Throw<ArgumentNullException> (() =>
-                new SdnChangesMonitorService (m_dataChangesChecker.Object, m_dataRetriever.Object, m_dataPersistence.Object, null))
+                new SdnChangesMonitorService<ISdnEntry> (m_dataChangesChecker.Object, m_dataRetriever.Object, m_dataPersistence.Object, null))
                   .ParamName
                   .ShouldBe ("options");
         }
@@ -74,7 +74,7 @@ namespace SdnListMonitor.Core.Tests.Service.Monitoring
         public void OnSdnDataChanged_WhenOnSdnDataChangedDelegateNull_ShouldThrowArgumentNullException ()
         {
             // Arrange
-            var monitorService = new SdnChangesMonitorService (m_dataChangesChecker.Object, m_dataRetriever.Object, m_dataPersistence.Object, m_options);
+            var monitorService = new SdnChangesMonitorService<ISdnEntry> (m_dataChangesChecker.Object, m_dataRetriever.Object, m_dataPersistence.Object, m_options);
 
             // Act & Assert
             Should.Throw<ArgumentNullException> (() => monitorService.OnSdnDataChanged (null))
@@ -107,8 +107,8 @@ namespace SdnListMonitor.Core.Tests.Service.Monitoring
             // Assert
             m_dataChangesChecker.Verify (self => 
                 self.CheckForChangesAsync (
-                    It.IsAny<ISdnDataSet> (), 
-                    It.IsAny<ISdnDataSet> (), 
+                    It.IsAny<ISdnDataSet<ISdnEntry>> (), 
+                    It.IsAny<ISdnDataSet<ISdnEntry>> (), 
                     It.IsAny<CancellationToken> ()), 
                 Times.Never);
         }
@@ -193,7 +193,7 @@ namespace SdnListMonitor.Core.Tests.Service.Monitoring
             m_dataRetriever.Setup (self => self.FetchSdnDataAsync (It.IsAny<CancellationToken> ())).ReturnsAsync (fetchedSdnDataSet);
             m_dataPersistence.Setup (self => self.Entries).Returns (Enumerable.Empty<ISdnEntry> ());
             m_dataChangesChecker.Setup (self => self.CheckForChangesAsync (m_dataPersistence.Object, fetchedSdnDataSet, It.IsAny<CancellationToken> ()))
-                                .ReturnsAsync ((ISdnDataChangesCheckResult) null);
+                                .ReturnsAsync ((ISdnDataChangesCheckResult<ISdnEntry>) null);
 
             var monitorService = new SdnChangesMonitorServiceFake (m_dataChangesChecker.Object, m_dataRetriever.Object, m_dataPersistence.Object, m_options);
 
@@ -291,15 +291,15 @@ namespace SdnListMonitor.Core.Tests.Service.Monitoring
             secondOnSdnDataChangedDelegate.Verify (self => self (monitorService, It.IsAny<SdnDataChangedEventArgs> ()), Times.Once);
         }
 
-        private static ISdnDataSet CreateSdnDataSet (IEnumerable<ISdnEntry> entries) =>
-            Mock.Of<ISdnDataSet> (self => self.Entries == entries);
+        private static ISdnDataSet<ISdnEntry> CreateSdnDataSet (IEnumerable<ISdnEntry> entries) =>
+            Mock.Of<ISdnDataSet<ISdnEntry>> (self => self.Entries == entries);
 
-        private static ISdnDataChangesCheckResult CreateSdnDataChangedCheckResult (bool dataChanged, int added = 0, int removed = 0, int modified = 0)
+        private static ISdnDataChangesCheckResult<ISdnEntry> CreateSdnDataChangedCheckResult (bool dataChanged, int added = 0, int removed = 0, int modified = 0)
         {
             return CreateSdnDataChangedCheckResult (dataChanged, new List<ISdnEntry> (added), new List<ISdnEntry> (removed), new List<ISdnEntry> (modified));
         }
 
-        private static ISdnDataChangesCheckResult CreateSdnDataChangedCheckResult (bool dataChanged, ISdnEntry added, ISdnEntry removed, ISdnEntry modified)
+        private static ISdnDataChangesCheckResult<ISdnEntry> CreateSdnDataChangedCheckResult (bool dataChanged, ISdnEntry added, ISdnEntry removed, ISdnEntry modified)
         {
             var addedEntries = new List<ISdnEntry> { added };
             var removedEntries = new List<ISdnEntry> { removed };
@@ -308,21 +308,21 @@ namespace SdnListMonitor.Core.Tests.Service.Monitoring
             return CreateSdnDataChangedCheckResult (dataChanged, addedEntries, removedEntries, modifiedEntries);
         }
 
-        private static ISdnDataChangesCheckResult CreateSdnDataChangedCheckResult (bool dataChanged,
+        private static ISdnDataChangesCheckResult<ISdnEntry> CreateSdnDataChangedCheckResult (bool dataChanged,
             List<ISdnEntry> added = null, List<ISdnEntry> removed = null, List<ISdnEntry> modified = null)
         {
 
-            return Mock.Of<ISdnDataChangesCheckResult> (self =>
+            return Mock.Of<ISdnDataChangesCheckResult<ISdnEntry>> (self =>
                 self.DataChanged == dataChanged
                 && self.EntriesAdded == added
                 && self.EntriesRemoved == removed
                 && self.EntriesModified == modified);
         }
 
-        private class SdnChangesMonitorServiceFake : SdnChangesMonitorService
+        private class SdnChangesMonitorServiceFake : SdnChangesMonitorService<ISdnEntry>
         {
-            public SdnChangesMonitorServiceFake (ISdnDataChangesChecker dataChangesChecker,  ISdnDataRetriever dataRetriever, 
-                ISdnDataPersistence dataPersistence, IOptions<SdnMonitorOptions> options) 
+            public SdnChangesMonitorServiceFake (ISdnDataChangesChecker<ISdnEntry> dataChangesChecker,  ISdnDataRetriever<ISdnEntry> dataRetriever, 
+                ISdnDataPersistence<ISdnEntry> dataPersistence, IOptions<SdnMonitorOptions> options) 
                 : base (dataChangesChecker, dataRetriever, dataPersistence, options)
             {
             }

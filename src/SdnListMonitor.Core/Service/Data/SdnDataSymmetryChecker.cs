@@ -9,32 +9,32 @@ using System.Threading.Tasks;
 namespace SdnListMonitor.Core.Service.Data
 {
     /// <summary>
-    /// Provides a symmetrical comparison between two <see cref="ISdnDataSet"/> instances.
+    /// Provides a symmetrical comparison between two <see cref="ISdnDataSet{TEntry}"/> instances.
     /// </summary>
     /// <remarks>
     // "Symmetrical" term here describes two SDN data sets following some sort of order, e.g.,
     // both data sets are in UID ascending order.
     /// </remarks>
-    public class SdnDataSymmetryChecker : ISdnDataChangesChecker
+    public class SdnDataSymmetryChecker<TEntry> : ISdnDataChangesChecker<TEntry> where TEntry : class, ISdnEntry
     {
-        private readonly IComparer<ISdnEntry> m_dataSetEntryComparer;
-        private readonly IEqualityComparer<ISdnEntry> m_entryEqualityComparer;
+        private readonly IComparer<TEntry> m_dataSetEntryComparer;
+        private readonly IEqualityComparer<TEntry> m_entryEqualityComparer;
 
         /// <summary>
-        /// Instantiates <see cref="SdnDataSymmetryChecker"/>.
+        /// Instantiates <see cref="SdnDataSymmetryChecker{TEntry}"/>.
         /// </summary>
         /// <param name="dataSetEntryComparer">A comparer that describes the symmetry between both data sets.</param>
         /// <param name="entryEqualityComparer">
         /// An equality comparer for a deeper comparison when two entries are considered equal in a shallow comparison.
         /// </param>
-        public SdnDataSymmetryChecker (IComparer<ISdnEntry> dataSetEntryComparer, IEqualityComparer<ISdnEntry> entryEqualityComparer)
+        public SdnDataSymmetryChecker (IComparer<TEntry> dataSetEntryComparer, IEqualityComparer<TEntry> entryEqualityComparer)
         {
             m_dataSetEntryComparer = dataSetEntryComparer.ThrowIfNull (nameof (dataSetEntryComparer));
             m_entryEqualityComparer = entryEqualityComparer.ThrowIfNull (nameof (entryEqualityComparer));
         }
 
         /// <summary>
-        /// Checks for symmetry differences between two <see cref="ISdnDataSet"/> instances:
+        /// Checks for symmetry differences between two <see cref="ISdnDataSet{TEntry}"/> instances:
         /// <paramref name="oldDataSet"/> and <paramref name="newDataSet"/>.
         /// </summary>
         /// <remarks>
@@ -44,8 +44,8 @@ namespace SdnListMonitor.Core.Service.Data
         /// <param name="oldDataSet">The initial SDN entries data set.</param>
         /// <param name="newDataSet">The new SDN entries data set.</param>
         /// <param name="cancellationToken">The cancellation token to cancel operation.</param>
-        /// <returns><see cref="Task{SdnDataChangesCheckResult}"/> indicating task completion and a comparison result.</returns>
-        public Task<ISdnDataChangesCheckResult> CheckForChangesAsync (ISdnDataSet oldDataSet, ISdnDataSet newDataSet, CancellationToken cancellationToken = default)
+        /// <returns><see cref="Task{ISdnDataChangesCheckResult{TEntry}}"/> indicating task completion and a comparison result.</returns>
+        public Task<ISdnDataChangesCheckResult<TEntry>> CheckForChangesAsync (ISdnDataSet<TEntry> oldDataSet, ISdnDataSet<TEntry> newDataSet, CancellationToken cancellationToken = default)
         {
             var oldDataSetEnumerator = oldDataSet.ThrowIfNull (nameof (oldDataSet)).Entries.GetEnumerator ();
             var newDataSetEnumerator = newDataSet.ThrowIfNull (nameof (newDataSet)).Entries.GetEnumerator ();
@@ -56,9 +56,9 @@ namespace SdnListMonitor.Core.Service.Data
             // Using LinkedList for O(1) Add and O(1) Count operations.
             // Also, we will only need to access them consecutively later on,
             // to save these changes in some persistence instance. 
-            var entriesAdded = new LinkedList<ISdnEntry> ();
-            var entriesRemoved = new LinkedList<ISdnEntry> ();
-            var entriesModified = new LinkedList<ISdnEntry> ();
+            var entriesAdded = new LinkedList<TEntry> ();
+            var entriesRemoved = new LinkedList<TEntry> ();
+            var entriesModified = new LinkedList<TEntry> ();
 
             // Enumerate both SDN entry sets side by side until one of the enumerators reaches the end.
             // For the sake of example, we will assume here that both SDN entry sets are compared in ascending order by the UID.
@@ -124,30 +124,30 @@ namespace SdnListMonitor.Core.Service.Data
                 AddEntriesFromEnumerator (entriesAdded, newDataSetEnumerator);
             }
 
-            return Task.FromResult<ISdnDataChangesCheckResult> (new SdnDataSymmetryCheckerResult (entriesAdded, entriesRemoved, entriesModified));
+            return Task.FromResult<ISdnDataChangesCheckResult<TEntry>> (new SdnDataSymmetryCheckerResult (entriesAdded, entriesRemoved, entriesModified));
         }
 
-        private void AddEntriesFromEnumerator (LinkedList<ISdnEntry> entries, IEnumerator<ISdnEntry> entriesEnumerator)
+        private void AddEntriesFromEnumerator (LinkedList<TEntry> entries, IEnumerator<TEntry> entriesEnumerator)
         {
             while (entriesEnumerator.MoveNext ())
                 entries.AddLast (entriesEnumerator.Current);
         }
 
-        private class SdnDataSymmetryCheckerResult : SdnDataChangesCheckResultBase
+        private class SdnDataSymmetryCheckerResult : SdnDataChangesCheckResultBase<TEntry>
         {
-            public SdnDataSymmetryCheckerResult (IReadOnlyCollection<ISdnEntry> added, 
-                IReadOnlyCollection<ISdnEntry> removed, IReadOnlyCollection<ISdnEntry> modified)
+            public SdnDataSymmetryCheckerResult (IReadOnlyCollection<TEntry> added, 
+                IReadOnlyCollection<TEntry> removed, IReadOnlyCollection<TEntry> modified)
             {
                 EntriesAdded = added;
                 EntriesRemoved = removed;
                 EntriesModified = modified;
             }
 
-            public override IReadOnlyCollection<ISdnEntry> EntriesAdded { get; }
+            public override IReadOnlyCollection<TEntry> EntriesAdded { get; }
 
-            public override IReadOnlyCollection<ISdnEntry> EntriesRemoved { get; }
+            public override IReadOnlyCollection<TEntry> EntriesRemoved { get; }
 
-            public override IReadOnlyCollection<ISdnEntry> EntriesModified { get; }
+            public override IReadOnlyCollection<TEntry> EntriesModified { get; }
         }
     }
 }
