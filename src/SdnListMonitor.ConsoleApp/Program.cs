@@ -27,7 +27,7 @@ namespace SdnListMonitor.ConsoleApp
             var dataChangesChecker = new SdnDataSymmetryChecker<SdnXmlEntry> (entriesOrderComparer, entryEqualityComparer);
 
             // Initialize a retriever for retrieving SDN List from a local/remote location:
-            var sdnXmlDataRetrieverOptions = new SdnXmlDataRetrieverOptions { XmlFilePath = @"{insert SDN.XML path here}" };
+            var sdnXmlDataRetrieverOptions = new SdnXmlDataRetrieverOptions { XmlFilePath = @"https://www.treasury.gov/ofac/downloads/sdn.xml" };
             var dataRetriever = new SdnXmlDataRetriever (new XmlReaderFactory (), entriesOrderComparer, Options.Create (sdnXmlDataRetrieverOptions));
 
             // Prefetch the SDN List and store it in memory:
@@ -39,6 +39,7 @@ namespace SdnListMonitor.ConsoleApp
 
             using var monitor = new SdnChangesMonitorService<SdnXmlEntry> (dataChangesChecker, dataRetriever, dataPersistence, Options.Create (monitoringOptions));
             monitor.OnSdnDataChanged (OnSdnDataChanged);
+            monitor.OnSdnDataCheckCompleted (OnSdnDataCheckCompleted);
 
             Console.WriteLine ($"MONITORING START - US - OFAC Specially Designated Nationals (SDN) List {DateTimeOffset.Now}.");
             await monitor.StartAsync (token);
@@ -51,6 +52,11 @@ namespace SdnListMonitor.ConsoleApp
         {
             Console.WriteLine ($"LIST UPDATED - US - OFAC Specially Designated Nationals (SDN) List {DateTimeOffset.Now}.");
             Console.WriteLine ($" {args.EntriesAdded} added, {args.EntriesModified} modified, {args.EntriesRemoved} removed");
+        }
+
+        private static void OnSdnDataCheckCompleted (object sender)
+        {
+            Console.WriteLine ($"LIST CHECK COMPLETED - US - OFAC Specially Designated Nationals (SDN) List {DateTimeOffset.Now}.");
         }
     }
 }

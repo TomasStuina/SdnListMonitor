@@ -71,6 +71,18 @@ namespace SdnListMonitor.Core.Tests.Service.Monitoring
         }
 
         [Fact]
+        public void OnSdnDataCheckCompleted_WhenOnSdnDataCheckCompletedDelegateNull_ShouldThrowArgumentNullException ()
+        {
+            // Arrange
+            var monitorService = new SdnChangesMonitorService<ISdnEntry> (m_dataChangesChecker.Object, m_dataRetriever.Object, m_dataPersistence.Object, m_options);
+
+            // Act & Assert
+            Should.Throw<ArgumentNullException> (() => monitorService.OnSdnDataCheckCompleted (null))
+                  .ParamName
+                  .ShouldBe ("onSdnDataCheckCompletedDelegate");
+        }
+
+        [Fact]
         public void OnSdnDataChanged_WhenOnSdnDataChangedDelegateNull_ShouldThrowArgumentNullException ()
         {
             // Arrange
@@ -265,7 +277,7 @@ namespace SdnListMonitor.Core.Tests.Service.Monitoring
         }
 
         [Fact]
-        public async Task ExecuteMonitoringCheckAsync_WhenThereAreMultipleDelegatesRegistered_ShouldInvokeAllOfThem ()
+        public async Task ExecuteMonitoringCheckAsync_WhenThereAreMultipleDataChangedDelegatesRegistered_ShouldInvokeAllOfThem ()
         {
             // Arrange
             var fetchedSdnDataSet = CreateSdnDataSet (Enumerable.Empty<ISdnEntry> ());
@@ -289,6 +301,59 @@ namespace SdnListMonitor.Core.Tests.Service.Monitoring
             // Assert
             firstOnSdnDataChangedDelegate.Verify (self => self (monitorService, It.IsAny<SdnDataChangedEventArgs> ()), Times.Once);
             secondOnSdnDataChangedDelegate.Verify (self => self (monitorService, It.IsAny<SdnDataChangedEventArgs> ()), Times.Once);
+        }
+
+        [Theory]
+        [InlineData (true)]
+        [InlineData (false)]
+        public async Task ExecuteMonitoringCheckAsync_WhenDataCheckCompleted_ShouldInvokeOnSdnDataCheckCompletedDelegate (bool dataChanged)
+        {
+            // Arrange
+            var fetchedSdnDataSet = CreateSdnDataSet (Enumerable.Empty<ISdnEntry> ());
+            m_dataRetriever.Setup (self => self.FetchSdnDataAsync (It.IsAny<CancellationToken> ())).ReturnsAsync (fetchedSdnDataSet);
+            m_dataPersistence.Setup (self => self.Entries).Returns (Enumerable.Empty<ISdnEntry> ());
+
+            var checkResult = CreateSdnDataChangedCheckResult (dataChanged, added: 0, removed: 0, modified: 0);
+            m_dataChangesChecker.Setup (self => self.CheckForChangesAsync (m_dataPersistence.Object, fetchedSdnDataSet, It.IsAny<CancellationToken> ()))
+                                .ReturnsAsync (checkResult);
+
+            var monitorService = new SdnChangesMonitorServiceFake (m_dataChangesChecker.Object, m_dataRetriever.Object, m_dataPersistence.Object, m_options);
+
+            var onSdnDataCheckCompletedDelegate = new Mock<Action<object>> ();
+            monitorService.OnSdnDataCheckCompleted (onSdnDataCheckCompletedDelegate.Object);
+
+            // Act
+            await monitorService.ExecuteMonitoringCheckAsync ();
+
+            // Assert
+            onSdnDataCheckCompletedDelegate.Verify (self => self (monitorService), Times.Once);
+        }
+
+        [Fact]
+        public async Task ExecuteMonitoringCheckAsync_WhenThereAreMultipleDataCheckCompletedDelegatesRegistered_ShouldInvokeAllOfThem ()
+        {
+            // Arrange
+            var fetchedSdnDataSet = CreateSdnDataSet (Enumerable.Empty<ISdnEntry> ());
+            m_dataRetriever.Setup (self => self.FetchSdnDataAsync (It.IsAny<CancellationToken> ())).ReturnsAsync (fetchedSdnDataSet);
+            m_dataPersistence.Setup (self => self.Entries).Returns (Enumerable.Empty<ISdnEntry> ());
+
+            var checkResult = CreateSdnDataChangedCheckResult (dataChanged: true, added: 0, removed: 0, modified: 0);
+            m_dataChangesChecker.Setup (self => self.CheckForChangesAsync (m_dataPersistence.Object, fetchedSdnDataSet, It.IsAny<CancellationToken> ()))
+                                .ReturnsAsync (checkResult);
+
+            var monitorService = new SdnChangesMonitorServiceFake (m_dataChangesChecker.Object, m_dataRetriever.Object, m_dataPersistence.Object, m_options);
+
+            var firstOnSdnDataCheckCompletedDelegate = new Mock<Action<object>> ();
+            var secondOnSdnDataCheckCompletedDelegate = new Mock<Action<object>> ();
+            monitorService.OnSdnDataCheckCompleted (firstOnSdnDataCheckCompletedDelegate.Object);
+            monitorService.OnSdnDataCheckCompleted (secondOnSdnDataCheckCompletedDelegate.Object);
+
+            // Act
+            await monitorService.ExecuteMonitoringCheckAsync ();
+
+            // Assert
+            firstOnSdnDataCheckCompletedDelegate.Verify (self => self (monitorService), Times.Once);
+            secondOnSdnDataCheckCompletedDelegate.Verify (self => self (monitorService), Times.Once);
         }
 
         private static ISdnDataSet<ISdnEntry> CreateSdnDataSet (IEnumerable<ISdnEntry> entries) =>
