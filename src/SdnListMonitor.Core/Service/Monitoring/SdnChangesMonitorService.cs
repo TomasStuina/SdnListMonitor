@@ -20,6 +20,7 @@ namespace SdnListMonitor.Core.Service.Monitoring
         private readonly ISdnDataChangesChecker<TEntry> m_dataChangesChecker;
         private readonly ISdnDataRetriever<TEntry> m_dataRetriever;
         private readonly ISdnDataPersistence<TEntry> m_dataPersistence;
+        private Action<object> m_onSdnDataCheckCompletedDelegate;
         private Action<object, SdnDataChangedEventArgs> m_onSdnDataChangedDelegate;
 
         /// <summary>
@@ -39,6 +40,13 @@ namespace SdnListMonitor.Core.Service.Monitoring
         }
 
         /// <summary>
+        /// Registers a delegate to execute when the SDN List check is completed.
+        /// </summary>
+        /// <param name="onSdnDataCheckCompletedDelegate">Delegate to register.</param>
+        public void OnSdnDataCheckCompleted (Action<object> onSdnDataCheckCompletedDelegate) =>
+            m_onSdnDataCheckCompletedDelegate += onSdnDataCheckCompletedDelegate.ThrowIfNull (nameof (onSdnDataCheckCompletedDelegate));
+
+        /// <summary>
         /// Registers a delegate to execute when there are changes in SDN List.
         /// </summary>
         /// <param name="onSdnDataChangedDelegate">Delegate to register.</param>
@@ -52,14 +60,17 @@ namespace SdnListMonitor.Core.Service.Monitoring
                 return;
             
             var result = await m_dataChangesChecker.CheckForChangesAsync (m_dataPersistence, retrievedSdnData, stoppingToken).ConfigureAwait (false);
-            if (result == null || !result.DataChanged)
-                return;
 
-            m_dataPersistence.ApplyChanges (result);
-            RaiseDataChangedEvent (result);
+            if (result != null && result.DataChanged)
+            {
+                m_dataPersistence.ApplyChanges (result);
+                InvokeDataChangedDelegate (result);
+            }
+
+            m_onSdnDataCheckCompletedDelegate?.Invoke (this);
         }
 
-        private void RaiseDataChangedEvent (ISdnDataChangesCheckResult<TEntry> changesCheckresult)
+        private void InvokeDataChangedDelegate (ISdnDataChangesCheckResult<TEntry> changesCheckresult)
         {
             m_onSdnDataChangedDelegate?.Invoke (this, new SdnDataChangedEventArgs
             {
