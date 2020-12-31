@@ -39,12 +39,12 @@ namespace SdnListMonitor.Core.Xml.Tests.Service.Data
         }
 
         [Fact]
-        public void Ctor_WhenEntriesComparerNull_ShouldThrowArgumentNullException ()
+        public void Ctor_WhenEntriesOrderComparerNull_ShouldThrowArgumentNullException ()
         {
             // Act & Assert
             Should.Throw<ArgumentNullException> (() => new SdnXmlDataRetriever (Mock.Of<IXmlReaderFactory> (), null, m_options))
                   .ParamName
-                  .ShouldBe ("entriesComparer");
+                  .ShouldBe ("entriesOrderComparer");
         }
 
         [Fact]

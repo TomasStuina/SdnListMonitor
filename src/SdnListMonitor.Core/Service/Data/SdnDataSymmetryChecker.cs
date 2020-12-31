@@ -17,19 +17,19 @@ namespace SdnListMonitor.Core.Service.Data
     /// </remarks>
     public class SdnDataSymmetryChecker<TEntry> : ISdnDataChangesChecker<TEntry> where TEntry : class, ISdnEntry
     {
-        private readonly IComparer<TEntry> m_dataSetEntryComparer;
+        private readonly IComparer<TEntry> m_entriesOrderComparer;
         private readonly IEqualityComparer<TEntry> m_entryEqualityComparer;
 
         /// <summary>
         /// Instantiates <see cref="SdnDataSymmetryChecker{TEntry}"/>.
         /// </summary>
-        /// <param name="dataSetEntryComparer">A comparer that describes the symmetry between both data sets.</param>
+        /// <param name="entriesOrderComparer">A comparer that describes the symmetry between both data sets.</param>
         /// <param name="entryEqualityComparer">
         /// An equality comparer for a deeper comparison when two entries are considered equal in a shallow comparison.
         /// </param>
-        public SdnDataSymmetryChecker (IComparer<TEntry> dataSetEntryComparer, IEqualityComparer<TEntry> entryEqualityComparer)
+        public SdnDataSymmetryChecker (IComparer<TEntry> entriesOrderComparer, IEqualityComparer<TEntry> entryEqualityComparer)
         {
-            m_dataSetEntryComparer = dataSetEntryComparer.ThrowIfNull (nameof (dataSetEntryComparer));
+            m_entriesOrderComparer = entriesOrderComparer.ThrowIfNull (nameof (entriesOrderComparer));
             m_entryEqualityComparer = entryEqualityComparer.ThrowIfNull (nameof (entryEqualityComparer));
         }
 
@@ -67,7 +67,7 @@ namespace SdnListMonitor.Core.Service.Data
                 var oldDataSetCurrent = oldDataSetEnumerator.Current;
                 var newDataSetCurrent = newDataSetEnumerator.Current;
                 // Perform a shallow comparison, e.g., find the difference between UIDs:
-                int comparisonResult = m_dataSetEntryComparer.Compare (oldDataSetCurrent, newDataSetCurrent);
+                int comparisonResult = m_entriesOrderComparer.Compare (oldDataSetCurrent, newDataSetCurrent);
                 if (comparisonResult < 0)
                 {
                     // if the entry in the old data set has a lesser UID than the one in the new data set,

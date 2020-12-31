@@ -20,15 +20,15 @@ namespace SdnListMonitor.ConsoleApp
             var token = source.Token;
 
             // Initialize comparers for the whole SDN List and individual entries:
-            var setEntryComparer = new SdnEntryAscendingByUidComparer ();
+            var entriesOrderComparer = new SdnEntryAscendingByUidComparer ();
             var entryEqualityComparer = new SdnXmlEntryEqualityComparer ();
 
             // Initialize a checker that is going to be used for comparing the stored SDN List with the fetched one:
-            var dataChangesChecker = new SdnDataSymmetryChecker<SdnXmlEntry> (setEntryComparer, entryEqualityComparer);
+            var dataChangesChecker = new SdnDataSymmetryChecker<SdnXmlEntry> (entriesOrderComparer, entryEqualityComparer);
 
             // Initialize a retriever for retrieving SDN List from a local/remote location:
-            var sdnXmlDataRetrieverOptions = new SdnXmlDataRetrieverOptions { XmlFilePath = @"{insert XML path here}" };
-            var dataRetriever = new SdnXmlDataRetriever (new XmlReaderFactory (), setEntryComparer, Options.Create (sdnXmlDataRetrieverOptions));
+            var sdnXmlDataRetrieverOptions = new SdnXmlDataRetrieverOptions { XmlFilePath = @"{insert SDN.XML path here}" };
+            var dataRetriever = new SdnXmlDataRetriever (new XmlReaderFactory (), entriesOrderComparer, Options.Create (sdnXmlDataRetrieverOptions));
 
             // Prefetch the SDN List and store it in memory:
             var preloadedSdnData = await dataRetriever.FetchSdnDataAsync (token).ConfigureAwait (false);
