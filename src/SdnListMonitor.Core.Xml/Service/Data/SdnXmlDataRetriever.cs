@@ -34,7 +34,7 @@ namespace SdnListMonitor.Core.Xml.Service.Data
         /// </summary>
         /// <param name="xmlReaderFactory">XML reader factory to instantiate <see cref="XmlReader"/>.</param>
         /// <param name="entriesOrderComparer">The comparer to use in sorting the entries.</param>
-        /// <param name="options">Options to control this provider.</param>
+        /// <param name="options">Options to configure this provider.</param>
         public SdnXmlDataRetriever (IXmlReaderFactory xmlReaderFactory, IComparer<ISdnEntry> entriesOrderComparer, IOptions<SdnXmlDataRetrieverOptions> options)
         {
             m_xmlReaderFactory = xmlReaderFactory.ThrowIfNull (nameof (xmlReaderFactory));
