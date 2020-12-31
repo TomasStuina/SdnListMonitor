@@ -27,14 +27,14 @@ namespace SdnListMonitor.Core.Tests.Service.Data
         public void Equals_WhenFirstSdnEntryNull_ShouldReturnFalse ()
         {
             // Act & Assert
-            m_comparer.Equals (null, Mock.Of<SdnXmlEntry> ()).ShouldBeFalse ();
+            m_comparer.Equals (null, new SdnXmlEntry ()).ShouldBeFalse ();
         }
 
         [Fact]
         public void Equals_WhenSecondSdnEntryNull_ShouldReturnFalse ()
         {
             // Act & Assert
-            m_comparer.Equals (null, Mock.Of<SdnXmlEntry> ()).ShouldBeFalse ();
+            m_comparer.Equals (null, new SdnXmlEntry ()).ShouldBeFalse ();
         }
 
         [Theory]
@@ -43,8 +43,8 @@ namespace SdnListMonitor.Core.Tests.Service.Data
         public void Equals_WhenBothUidsAreDifferent_ShouldReturnFalse (int firstEntryUid, int secondEntryUid)
         {
             // Arrange
-            var firstEntry = Mock.Of<SdnXmlEntry> (self => self.Uid == firstEntryUid);
-            var secondEntry = Mock.Of<SdnXmlEntry> (self => self.Uid == secondEntryUid);
+            var firstEntry = new SdnXmlEntry { Uid = firstEntryUid };
+            var secondEntry = new SdnXmlEntry { Uid = secondEntryUid };
 
             // Act & Assert
             m_comparer.Equals (firstEntry, secondEntry).ShouldBeFalse ();
@@ -55,8 +55,8 @@ namespace SdnListMonitor.Core.Tests.Service.Data
         public void Equals_WhenBothFirstNamesAreDifferent_ShouldReturnFalse (string firstEntryFirstName, string secondEntryFirstName)
         {
             // Arrange
-            var firstEntry = Mock.Of<SdnXmlEntry> (self => self.FirstName == firstEntryFirstName);
-            var secondEntry = Mock.Of<SdnXmlEntry> (self => self.FirstName == secondEntryFirstName);
+            var firstEntry = new SdnXmlEntry { FirstName = firstEntryFirstName };
+            var secondEntry = new SdnXmlEntry { FirstName = secondEntryFirstName };
 
             // Act & Assert
             m_comparer.Equals (firstEntry, secondEntry).ShouldBeFalse ();
@@ -67,8 +67,8 @@ namespace SdnListMonitor.Core.Tests.Service.Data
         public void Equals_WhenBothLastNamesAreDifferent_ShouldReturnFalse (string firstEntryLastName, string secondEntryLastName)
         {
             // Arrange
-            var firstEntry = Mock.Of<SdnXmlEntry> (self => self.LastName == firstEntryLastName);
-            var secondEntry = Mock.Of<SdnXmlEntry> (self => self.LastName == secondEntryLastName);
+            var firstEntry = new SdnXmlEntry { LastName = firstEntryLastName };
+            var secondEntry = new SdnXmlEntry { LastName = secondEntryLastName };
 
             // Act & Assert
             m_comparer.Equals (firstEntry, secondEntry).ShouldBeFalse ();
@@ -79,8 +79,8 @@ namespace SdnListMonitor.Core.Tests.Service.Data
         public void Equals_WhenBothTitlesAreDifferent_ShouldReturnFalse (string firstEntryTitle, string secondEntryTitle)
         {
             // Arrange
-            var firstEntry = Mock.Of<SdnXmlEntry> (self => self.Title == firstEntryTitle);
-            var secondEntry = Mock.Of<SdnXmlEntry> (self => self.Title == secondEntryTitle);
+            var firstEntry = new SdnXmlEntry { Title = firstEntryTitle };
+            var secondEntry = new SdnXmlEntry { Title = secondEntryTitle };
 
             // Act & Assert
             m_comparer.Equals (firstEntry, secondEntry).ShouldBeFalse ();
@@ -91,8 +91,8 @@ namespace SdnListMonitor.Core.Tests.Service.Data
         public void Equals_WhenBothSdnTypesAreDifferent_ShouldReturnFalse (string firstEntrySdnType, string secondEntrySdnType)
         {
             // Arrange
-            var firstEntry = Mock.Of<SdnXmlEntry> (self => self.SdnType == firstEntrySdnType);
-            var secondEntry = Mock.Of<SdnXmlEntry> (self => self.SdnType == secondEntrySdnType);
+            var firstEntry = new SdnXmlEntry { SdnType = firstEntrySdnType };
+            var secondEntry = new SdnXmlEntry { SdnType = secondEntrySdnType };
 
             // Act & Assert
             m_comparer.Equals (firstEntry, secondEntry).ShouldBeFalse ();
@@ -103,11 +103,36 @@ namespace SdnListMonitor.Core.Tests.Service.Data
         public void Equals_WhenBothRemarksAreDifferent_ShouldReturnFalse (string firstEntryRemarks, string secondEntryRemarks)
         {
             // Arrange
-            var firstEntry = Mock.Of<SdnXmlEntry> (self => self.Remarks == firstEntryRemarks);
-            var secondEntry = Mock.Of<SdnXmlEntry> (self => self.Remarks == secondEntryRemarks);
+            var firstEntry = new SdnXmlEntry { Remarks = firstEntryRemarks };
+            var secondEntry = new SdnXmlEntry { Remarks = secondEntryRemarks };
 
             // Act & Assert
             m_comparer.Equals (firstEntry, secondEntry).ShouldBeFalse ();
+        }
+
+        [Fact]
+        public void Equals_WhenBothEntriesHaveTheSameSingleLevelProperties_ShouldReturnTrue()
+        {
+            // Arrange
+            var firstEntry = CreatePrefilledSdnXmlEntrySample ();
+            var secondEntry = CreatePrefilledSdnXmlEntrySample ();
+
+            // Act & Assert
+            m_comparer.Equals (firstEntry, secondEntry).ShouldBeTrue ();
+        }
+
+        [Fact]
+        public void Equals_WhenBothEntriesEqualButOneEntryHasSdnTypeInDifferentCase_ShouldReturnTrue ()
+        {
+            // Arrange
+            var firstEntry = CreatePrefilledSdnXmlEntrySample ();
+            firstEntry.SdnType = "sdntype";
+
+            var secondEntry = CreatePrefilledSdnXmlEntrySample ();
+            secondEntry.SdnType = "SDNTYPE";
+
+            // Act & Assert
+            m_comparer.Equals (firstEntry, secondEntry).ShouldBeTrue ();
         }
 
         [Fact]
@@ -145,6 +170,19 @@ namespace SdnListMonitor.Core.Tests.Service.Data
             yield return new object[] { "", null };
             yield return new object[] { "a", "b" };
             yield return new object[] { "\u0160", "S" }; // Š AND S
+        }
+
+        private static SdnXmlEntry CreatePrefilledSdnXmlEntrySample ()
+        {
+            return new SdnXmlEntry
+            {
+                Uid = 0,
+                FirstName = "FirstName",
+                LastName = "LastName",
+                Title = "Title",
+                SdnType = "Type",
+                Remarks = "Remarks",
+            };
         }
     }
 }
